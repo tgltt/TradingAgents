@@ -14,13 +14,12 @@ except ImportError:
         return "Chinese finance utilities not available"
 from .finnhub_utils import get_data_in_range
 from dateutil.relativedelta import relativedelta
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import json
 import os
 import pandas as pd
 from tqdm import tqdm
-import yfinance as yf
+
 from openai import OpenAI
 from .config import get_config, set_config, DATA_DIR
 
@@ -532,34 +531,35 @@ def get_stock_stats_indicators_window(
     before = datetime.strftime(before, "%Y%m%d")
 
     if not online:
-        # read from YFin data
-        data = pd.read_csv(
-            os.path.join(
-                DATA_DIR,
-                f"market_data/price_data/{symbol}-stock-stats-indicator-{before}-{end_date}.csv",
-            )
-        )
+        data = pd.read_csv(os.path.join(DATA_DIR, "market_data", "price_data", f"{symbol}-stock-stats-indicator-{before}-{end_date}.csv"))
     else:
         data = _download_tushare_stock_price_data(symbol=symbol,
                                                   start_date=before,
                                                   end_date=end_date,
-                                                  look_back_days=look_back_days + 100)
-        data = data[[["trade_date", "open", "high", "low", "close", "vol"]]]
-        data = data.rename(columns={"trade_date": "date", "vol": "volumn"})
+                                                  look_back_days=look_back_days + 365)
     
-    indicator_value =  "N/A: Not a trading day (weekend or holiday)"
-    if not data.empty:
-        data = wrap(data)
-        # 计算指标
-        data = data[indicator]
-            
-        data = data[data["date"] >= before]
-
         if not data.empty:
-            data = data[["date", indicator]]
-            for _, row in data.iterrows():
-                indicator_value += f"{row['date']}: {row[indicator]}\n" 
-
+            data = data[["trade_date", "open", "high", "low", "close", "vol"]]
+            data = data.rename(columns={"trade_date": "date", "vol": "volumn"})
+            
+            data = wrap(data)
+            # 计算指标
+            data = data[indicator]
+            
+            data = data[data.index >= before].to_frame()
+            
+            save_output = os.path.join(DATA_DIR, "market_data", "price_data", f"{symbol}-stock-stats-indicator-{before}-{end_date}.csv")
+            data.to_csv(save_output)
+            
+            print(f"Saved {save_output}")
+            
+    if not data.empty:
+        indicator_value = ""
+        for index, value in data.iterrows():
+            indicator_value += f"{index}: {value[indicator]:.2}\n" 
+    else:
+        indicator_value = "N/A: Not a trading day (weekend or holiday)"  
+                
     result_str = (
         f"## {indicator} values from {before} to {end_date}:\n\n"
         + f"{indicator_value}"
@@ -591,9 +591,12 @@ def _download_tushare_stock_price_data(
         )
     
     if save_to_file:
-        output_csv = os.path.join(DATA_DIR, 
-                                f"market_data/price_data/{symbol}-tushare-data-{start_date}-{end_date}.csv")
+        dest_dir = os.path.join(DATA_DIR, "market_data", "price_data")
+        os.makedirs(dest_dir, exist_ok=True) 
+        output_csv = os.path.join(dest_dir, f"{symbol}-tushare-data-{start_date}-{end_date}.csv")
         data.to_csv(output_csv, index=False)
+        
+        print(f"Saved {output_csv}")
     
     return data
 
@@ -603,18 +606,16 @@ def get_tushare_tech_data_offline(
     start_date: Annotated[str, "Start date in yyyymmdd format"],
     end_date: Annotated[str, "End date in yyyymmdd format"]) -> str:
     # read in data
-    data = pd.read_csv(
-        os.path.join(
-            DATA_DIR,
-            f"market_data/price_data/{symbol}-tushare-data-{start_date}-{end_date}.csv"
-        )
-    )
+    cache_file = os.path.join(DATA_DIR, "market_data", "price_data", f"{symbol}-tushare-data-{start_date}-{end_date}.csv")
+    data = pd.read_csv(cache_file)
     
     # Check if data is empty
     if len(data) <= 0:
         return (
             f"No data found for symbol '{symbol}' between {start_date} and {end_date}"
         )
+        
+    print(f"Loaded {cache_file}")
 
     return _get_tushare_tech_data(data=data, symbol=symbol, start_date=start_date, end_date=end_date)
 
@@ -637,7 +638,9 @@ def _get_tushare_tech_data (
 ):
     selected_columns = ["trade_date", "open", "high", "low", "close", "vol", "amount"]
     data = data[selected_columns]
-    data = data[data["trade_date"].str >= start_date]
+    data = data.rename(columns={"trade_date": "date", "vol": "volumn"})
+    
+    data = data[data["date"].astype(str) >= start_date]
     
     # Convert DataFrame to CSV string
     csv_string = data.to_csv(index=False)
@@ -730,7 +733,7 @@ def _get_company_profile(ticker):
     
     company_profile["CompanyName"] = stock_basic["name"]
     company_profile["Industry"] = stock_basic["industry"]
-    company_profile["RegCapital"] = str(eval(stock_company["reg_capital"]) / 100)
+    company_profile["RegCapital"] = str(stock_company["reg_capital"].astype(int))
     company_profile["Currency"] = "RMB"
     company_profile["Country"] = "China"
     
@@ -738,12 +741,13 @@ def _get_company_profile(ticker):
     
 
 def get_fundamentals_tushare(symbol: Annotated[str, "Ticker symbol of the company"],
-                             curr_date: Annotated[str, "Current date in yyyymmdd format"],
+                             cur_date: Annotated[str, "Current date in yyyymmdd format"],
                              look_back_years: Annotated[int, "How many years to look back"]):
-    dt = pd.to_datetime(curr_date)
+    dt = pd.to_datetime(cur_date)
     start_date = dt - pd.DateOffset(years=look_back_years)
+    start_date = start_date.strftime("%Y%m%d")
 
-    data = api.fina_indicator(ts_code=symbol, start_date=start_date, end_date=curr_date)
+    data = api.fina_indicator(ts_code=symbol, start_date=start_date, end_date=cur_date)
     data = data[["eps", "bps", "retainedps", "cfps", "profit_dedt", "gross_margin", "roe", "debt_to_assets", "or_yoy", "op_yoy", "fixed_assets"]]
 
     # Convert DataFrame to CSV string
@@ -751,7 +755,7 @@ def get_fundamentals_tushare(symbol: Annotated[str, "Ticker symbol of the compan
 
     # Format report
     report = f"# {symbol.upper()} Fundamental Analysis Report (Tushare Data Source)\n\n"
-    report += f"**Data Retrieved**: {curr_date}\n"
+    report += f"**Data Retrieved**: {cur_date}\n"
     report += f"**Data Source**: Tushare API\n\n"
 
     # Company profile section
@@ -779,7 +783,7 @@ def get_fundamentals_tushare(symbol: Annotated[str, "Ticker symbol of the compan
     report += f"- **BPS**: {data['bps'][0]}\n"
     report += f"- **Gross Margin**: {data['gross_margin']}%\n"
     report += f"- **Retained PS**: {data['retainedps'][0]}\n"
-    report += f"- **Return on Equity‌**: {data['roa']}%\n"
+    # report += f"- **Return on Equity‌**: {data['roa']}%\n"
     report += f"- **Operating Income-on-year Growth rate**: {data['or_yoy']}%\n"
     report += f"- **Year-on-year Growth Rate of Operating Profit**: {data['op_yoy']}%\n\n"
 
