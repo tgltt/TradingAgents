@@ -42,7 +42,7 @@ from .signal_processing import SignalProcessor
 class TradingAgentsGraph:
     """Main class that orchestrates the trading agents framework."""
     
-    def _get_api_key(llm_provider):
+    def _get_api_key(self, llm_provider):
         if llm_provider == "zhipu":
             return os.getenv('ZHIPU_API_KEY')
         elif llm_provider == "google":

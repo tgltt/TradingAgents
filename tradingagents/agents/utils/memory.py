@@ -47,6 +47,9 @@ class FinancialSituationMemory:
                     "2. OPENAI_API_KEY (fallback for OpenAI embeddings)\n"
                     "Install dashscope package: pip install dashscope"
                 )
+        elif self.llm_provider == "zhipu":
+            self.embedding = "Embedding-3"
+            self.client = OpenAI(base_url=config["backend_url"], api_key=os.getenv("ZHIPU_API_KEY"))
         elif self.llm_provider == "google":
             # Google AI uses DashScope embedding if available, otherwise OpenAI
             dashscope_key = os.getenv('DASHSCOPE_API_KEY')

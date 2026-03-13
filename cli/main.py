@@ -1,3 +1,6 @@
+import sys
+sys.path.append('tradingagents')
+
 from typing import Optional
 import datetime
 import typer
@@ -20,10 +23,13 @@ from rich import box
 from rich.align import Align
 from rich.rule import Rule
 
+import tradingagents
+
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 from cli.models import AnalystType
 from cli.utils import *
+
 
 console = Console()
 
@@ -444,11 +450,11 @@ def get_user_selections():
     selected_ticker = get_ticker(selected_market)
 
     # Step 3: Analysis date
-    default_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    default_date = datetime.datetime.now().strftime("%Y%m%d")
     console.print(
         create_question_box(
             "Step 3: Analysis Date",
-            "Enter the analysis date (YYYY-MM-DD)",
+            "Enter the analysis date (YYYYMMDD)",
             default_date,
         )
     )

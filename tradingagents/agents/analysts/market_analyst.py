@@ -12,13 +12,13 @@ def create_market_analyst(llm, toolkit):
 
         if toolkit.config["online_tools"]:
             tools = [
-                toolkit.get_YFin_data_online,
-                toolkit.get_stockstats_indicators_report_online,
+                toolkit.get_tushare_tech_data_online,
+                toolkit.get_stockstats_indicators_report_online
             ]
         else:
             tools = [
-                toolkit.get_YFin_data,
-                toolkit.get_stockstats_indicators_report,
+                toolkit.get_tushare_tech_data_offline,
+                toolkit.get_stockstats_indicators_report_offline
             ]
 
         system_message = (
