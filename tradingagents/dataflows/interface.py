@@ -592,7 +592,7 @@ def _download_tushare_stock_price_data(
     
     if save_to_file:
         dest_dir = os.path.join(DATA_DIR, "market_data", "price_data")
-        os.makedirs(dest_dir, exist_ok=True) 
+        os.makedirs(dest_dir, exist_ok=True)
         output_csv = os.path.join(dest_dir, f"{symbol}-tushare-data-{start_date}-{end_date}.csv")
         data.to_csv(output_csv, index=False)
         
