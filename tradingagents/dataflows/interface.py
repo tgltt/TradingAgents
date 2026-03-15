@@ -27,6 +27,10 @@ import sxsc_tushare as sx
 sx.set_token("baab01b29616c4c2a7bc206eac9ed3c34c944aba977c438323157edb")
 api = sx.get_api(env="prd")
 
+import logging
+from tradingagents.log.log import TRADING_AGENTS_GRAPH
+tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
+
 
 def get_finnhub_news(
     ticker: Annotated[
@@ -442,7 +446,7 @@ def get_stock_stats_indicators_window(
     symbol: Annotated[str, "ticker symbol of the company"],
     indicator: Annotated[str, "technical indicator to get the analysis and report of"],
     curr_date: Annotated[
-        str, "The current trading date you are trading on, YYYY-mm-dd"
+        str, "The current trading date you are trading on, YYYYmmdd"
     ],
     look_back_days: Annotated[int, "how many days to look back"],
     online: Annotated[bool, "to fetch data online or offline"]) -> str:
@@ -538,9 +542,9 @@ def get_stock_stats_indicators_window(
                                                   end_date=end_date,
                                                   look_back_days=look_back_days + 365)
     
-        if not data.empty:
+        if len(data) > 0:
             data = data[["trade_date", "open", "high", "low", "close", "vol"]]
-            data = data.rename(columns={"trade_date": "date", "vol": "volumn"})
+            data = data.rename(columns={"trade_date": "date", "vol": "volume"})
             
             data = wrap(data)
             # 计算指标
@@ -553,12 +557,12 @@ def get_stock_stats_indicators_window(
             
             print(f"Saved {save_output}")
             
-    if not data.empty:
+    if len(data) <= 0:
+        indicator_value = f"No data found for symbol '{symbol}' between {before} and {end_date}"      
+    else:
         indicator_value = ""
         for index, value in data.iterrows():
-            indicator_value += f"{index}: {value[indicator]:.2}\n" 
-    else:
-        indicator_value = "N/A: Not a trading day (weekend or holiday)"  
+            indicator_value += f"{index}: {value[indicator]:.2}\n"  
                 
     result_str = (
         f"## {indicator} values from {before} to {end_date}:\n\n"
@@ -586,9 +590,8 @@ def _download_tushare_stock_price_data(
     data = api.daily(ts_code=symbol, start_date=q_start_date, end_date=end_date)
     # Check if data is empty
     if len(data) <= 0:
-        return (
-            f"No data found for symbol '{symbol}' between {start_date} and {end_date}"
-        )
+        tag_logger.error(f"No data found for symbol '{symbol}' between {start_date} and {end_date}")
+        return None
     
     if save_to_file:
         dest_dir = os.path.join(DATA_DIR, "market_data", "price_data")

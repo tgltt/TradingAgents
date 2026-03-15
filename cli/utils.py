@@ -1,4 +1,6 @@
+import datetime
 import questionary
+import typer
 from typing import List, Optional, Tuple, Dict
 
 from cli.models import AnalystType
@@ -24,10 +26,10 @@ def select_market():
         },
         "2": {
             "name": "China A-Share",
-            "default": "600036",
-            "examples": ["000001", "600036", "000858", "300001", "688001"],
-            "format": "6-digit code (e.g., 600036, 000001)",
-            "pattern": r'^\d{6}$',
+            "default": "600036.SH",
+            "examples": ["000001.SZ", "600036.SH", "000858.SZ", "300001.SZ", "688001.SH"],
+            "format": "6-digit code & 2 char (e.g., 600036, 000001)",
+            "pattern": r'^\d{6}.(SH|SZ)$',
             "data_source": "tongdaxin"
         }
     }
@@ -127,37 +129,23 @@ def get_ticker(market=None) -> str:
             console.print(f"[yellow]Please use correct format: {market['format']}[/yellow]")
 
 
-def get_analysis_date() -> str:
-    """Prompt the user to enter a date in YYYY-MM-DD format."""
-    import re
-    from datetime import datetime
-
-    def validate_date(date_str: str) -> bool:
-        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
-            return False
+def get_analysis_date(console):
+    """Get the analysis date from user input."""
+    while True:
+        date_str = typer.prompt(
+            "", default=datetime.datetime.now().strftime("%Y%m%d")
+        )
         try:
-            datetime.strptime(date_str, "%Y-%m-%d")
-            return True
+            # Validate date format and ensure it's not in the future
+            analysis_date = datetime.datetime.strptime(date_str, "%Y%m%d")
+            if analysis_date.date() > datetime.datetime.now().date():
+                console.print("[red]Error: Analysis date cannot be in the future[/red]")
+                continue
+            return date_str
         except ValueError:
-            return False
-
-    date = questionary.text(
-        "Enter the analysis date (YYYY-MM-DD):",
-        validate=lambda x: validate_date(x.strip())
-        or "Please enter a valid date in YYYY-MM-DD format.",
-        style=questionary.Style(
-            [
-                ("text", "fg:green"),
-                ("highlighted", "noinherit"),
-            ]
-        ),
-    ).ask()
-
-    if not date:
-        console.print("\n[red]No date provided. Exiting...[/red]")
-        exit(1)
-
-    return date.strip()
+            console.print(
+                "[red]Error: Invalid date format. Please use YYYYMMDD[/red]"
+            )
 
 
 def select_analysts() -> List[AnalystType]:

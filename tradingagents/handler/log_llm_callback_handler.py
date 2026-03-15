@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 from uuid import UUID
 
@@ -9,10 +8,25 @@ from langchain_core.messages import BaseMessage
 
 from tenacity import RetryCallState
 
-from log import tag_logger
-
+import logging
+from tradingagents.log.log import TRADING_AGENTS_GRAPH
+tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
 
 class LogCallBackHandler(BaseCallbackHandler):
+    
+    def on_chat_model_start(
+        self,
+        serialized: dict[str, Any],
+        messages: list[list[BaseMessage]],
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        tag_logger.debug(f"on_chat_model_start, serialized={serialized}, messages={messages}, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}, metadata={metadata}, kwargs={kwargs}")
+
     
     def on_llm_start(
         self,
@@ -25,7 +39,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         metadata: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_agent_finish")
+        tag_logger.debug(f"on_llm_start, serialized={serialized}, prompts={prompts}, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}, metadata={metadata}, kwargs={kwargs}")
     
 
     def on_llm_end(
@@ -37,26 +51,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         tags: list[str] | None = None,
         **kwargs: Any,
     ) -> Any:
-        if response is None:
-            tag_logger.info(f"on_llm_end, response is None, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}")
-            return
-        
-        generations = response.generations
-        if len(generations) <= 0:
-            tag_logger.info(f"on_llm_end, generations is None or empty, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}")
-            return
-        
-        tag_logger.info(f"------------ on_llm_end ------------")
-        for generation in generations:
-            if len(generation) <= 0:
-                continue
-            
-            for gen_item in generation:
-                if len(gen_item.text) <= 0:
-                    continue
-                
-                tag_logger.info(f"generation={gen_item.text}")
-        tag_logger.info(f"------------ on_llm_end ------------ run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}")
+        tag_logger.debug(f"on_llm_end, response={response}, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}, kwargs={kwargs}")
     
 
     def on_llm_new_token(
@@ -69,7 +64,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         tags: list[str] | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_llm_new_token")
+        tag_logger.debug(f"---> on_llm_new_token, token={token}, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}, kwargs={kwargs}")
         
 
     def on_llm_error(
@@ -81,7 +76,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         tags: list[str] | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_llm_error")
+        tag_logger.debug(f"---> on_llm_error, error={error}, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}， kwargs={kwargs}")
     
 
     def on_chain_start(
@@ -95,7 +90,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         metadata: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_chain_start")
+        tag_logger.debug(f"---> on_chain_start, serialized={serialized}, inputs={inputs}, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}, metadata={metadata}, kwargs={kwargs}")
         
         
     def on_chain_end(
@@ -106,7 +101,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_chain_end")
+        tag_logger.debug(f"---> on_chain_end, outputs={outputs}, run_id={run_id}, parent_run_id={parent_run_id}, kwargs={kwargs}")
 
 
     def on_chain_error(
@@ -117,7 +112,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_chain_error")
+        tag_logger.debug(f"---> on_chain_error, error={error}, run_id={run_id}, parent_run_id={parent_run_id}, kwargs={kwargs}")
     
 
     def on_agent_action(
@@ -128,7 +123,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_agent_action")
+        tag_logger.debug(f"---> on_agent_action, action={action}, run_id={run_id}, parent_run_id={parent_run_id}, kwargs={kwargs}")
     
 
     def on_agent_finish(
@@ -139,7 +134,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_agent_finish")
+        tag_logger.debug(f"---> on_agent_finish, finish={finish}, run_id={run_id}, parent_run_id={parent_run_id}, kwargs={kwargs}")
  
  
     def on_tool_start(
@@ -154,7 +149,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         inputs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_tool_start, input_str={input_str}")
+        tag_logger.debug(f"---> on_tool_start, input_str={input_str}, serialized={serialized}, inputs={inputs}, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}, metadata={metadata}, kwargs={kwargs}")
            
         
     def on_tool_end(
@@ -165,7 +160,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_tool_end, output={output}")
+        tag_logger.debug(f"---> on_tool_end, output={output}, run_id={run_id}, parent_run_id={parent_run_id}, kwargs={kwargs}")
 
 
     def on_tool_error(
@@ -176,21 +171,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_tool_error, error={error}")
-
-
-    def on_chat_model_start(
-        self,
-        serialized: dict[str, Any],
-        messages: list[list[BaseMessage]],
-        *,
-        run_id: UUID,
-        parent_run_id: UUID | None = None,
-        tags: list[str] | None = None,
-        metadata: dict[str, Any] | None = None,
-        **kwargs: Any,
-    ) -> Any:
-        print(f"---> on_chat_model_start")
+        tag_logger.debug(f"---> on_tool_error, error={error}, run_id={run_id}, parent_run_id={parent_run_id}, kwargs={kwargs}")
 
 
     def on_retriever_start(
@@ -204,7 +185,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         metadata: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_retriever_start")
+        tag_logger.debug(f"---> on_retriever_start, query={query}, serialized={serialized}, run_id={run_id}, parent_run_id={parent_run_id}, tags={tags}, metadata={metadata}, kwargs={kwargs}")
     
         
     def on_text(
@@ -215,8 +196,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_text")
-    
+        tag_logger.debug(f"---> on_text, text={text}, run_id={run_id}, parent_run_id={parent_run_id}, kwargs={kwargs}")
     
 
     def on_retry(
@@ -227,7 +207,7 @@ class LogCallBackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_retry")
+        tag_logger.debug(f"---> on_retry, retry_state={retry_state}, run_id={run_id}, parent_run_id={parent_run_id}, kwargs={kwargs}")
     
 
     def on_custom_event(
@@ -240,4 +220,4 @@ class LogCallBackHandler(BaseCallbackHandler):
         metadata: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> Any:
-        print(f"---> on_custom_event")
+        tag_logger.debug(f"---> on_custom_event, name={name}, data={data}, run_id={run_id}, tags={tags}, metadata={metadata}, kwargs={kwargs}")

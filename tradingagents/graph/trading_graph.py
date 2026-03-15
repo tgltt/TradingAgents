@@ -38,8 +38,11 @@ from .propagation import Propagator
 from .reflection import Reflector
 from .signal_processing import SignalProcessor
 
-from handler import LogCallBackHandler
-from log import tag_logger
+from tradingagents.handler.log_llm_callback_handler import LogCallBackHandler
+
+import logging
+from tradingagents.log.log import TRADING_AGENTS_GRAPH
+tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
 
 
 class TradingAgentsGraph:
@@ -77,7 +80,7 @@ class TradingAgentsGraph:
             os.path.join(self.config["project_dir"], "dataflows/data_cache"),
             exist_ok=True,
         )
-
+        
         # Initialize LLMs
         config_llm_provider = self.config["llm_provider"].lower()
         if config_llm_provider in ["openai", "zhipu", "ollama", "openrouter"]:
@@ -86,7 +89,7 @@ class TradingAgentsGraph:
             self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"], api_key=api_key, callbacks=[LogCallBackHandler()])
             
             tag_logger.info(f"Initialize LLM, deep_thinking_llm: model={self.deep_thinking_llm.model}, openai_api_base={self.deep_thinking_llm.openai_api_base}, "
-                            "quick_thinking_llm: model={self.quick_thinking_llm.model}, , openai_api_base={self.quick_thinking_llm.openai_api_base}")
+                            f"quick_thinking_llm: model={self.quick_thinking_llm.model}, openai_api_base={self.quick_thinking_llm.openai_api_base}")
         elif config_llm_provider == "anthropic":
             self.deep_thinking_llm = ChatAnthropic(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
             self.quick_thinking_llm = ChatAnthropic(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])

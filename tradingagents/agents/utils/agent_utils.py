@@ -170,7 +170,7 @@ class Toolkit:
             str, "technical indicator to get the analysis and report of"
         ],
         curr_date: Annotated[
-            str, "The current trading date you are trading on, YYYY-mm-dd"
+            str, "The current trading date you are trading on, YYYYmmdd"
         ],
         look_back_days: Annotated[int, "how many days to look back"] = 30,
     ) -> str:
@@ -179,7 +179,7 @@ class Toolkit:
         Args:
             symbol (str): Ticker symbol of the company, e.g. AAPL, TSM
             indicator (str): Technical indicator to get the analysis and report of
-            curr_date (str): The current trading date you are trading on, YYYY-mm-dd
+            curr_date (str): The current trading date you are trading on, YYYYmmdd
             look_back_days (int): How many days to look back, default is 30
         Returns:
             str: A formatted dataframe containing the stock stats indicators for the specified ticker symbol and indicator.
@@ -199,7 +199,7 @@ class Toolkit:
             str, "technical indicator to get the analysis and report of"
         ],
         curr_date: Annotated[
-            str, "The current trading date you are trading on, YYYY-mm-dd"
+            str, "The current trading date you are trading on, YYYYmmdd"
         ],
         look_back_days: Annotated[int, "how many days to look back"] = 30,
     ) -> str:
@@ -208,7 +208,7 @@ class Toolkit:
         Args:
             symbol (str): Ticker symbol of the company, e.g. AAPL, TSM
             indicator (str): Technical indicator to get the analysis and report of
-            curr_date (str): The current trading date you are trading on, YYYY-mm-dd
+            curr_date (str): The current trading date you are trading on, YYYYmmdd
             look_back_days (int): How many days to look back, default is 30
         Returns:
             str: A formatted dataframe containing the stock stats indicators for the specified ticker symbol and indicator.
