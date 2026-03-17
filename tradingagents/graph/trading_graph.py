@@ -50,9 +50,11 @@ class TradingAgentsGraph:
     
     def _get_api_key(self, llm_provider):
         if llm_provider == "zhipu":
-            return os.getenv('ZHIPU_API_KEY')
+            return os.getenv("ZHIPU_API_KEY")
+        elif llm_provider == "hunyuan":
+            return os.getenv("HUNYUAN_API_KEY")
         elif llm_provider == "google":
-            return os.getenv('GOOGLE_API_KEY')
+            return os.getenv("GOOGLE_API_KEY")
         else: 
             return ""
 
@@ -83,7 +85,7 @@ class TradingAgentsGraph:
         
         # Initialize LLMs
         config_llm_provider = self.config["llm_provider"].lower()
-        if config_llm_provider in ["openai", "zhipu", "ollama", "openrouter"]:
+        if config_llm_provider in ["openai", "zhipu", "hunyuan", "ollama", "openrouter"]:
             api_key = self._get_api_key(config_llm_provider)
             self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"], api_key=api_key, callbacks=[LogCallBackHandler()])
             self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"], api_key=api_key, callbacks=[LogCallBackHandler()])

@@ -73,3 +73,8 @@ print(df)
 
 # data = api.stock_company(ts_code="600036.SH", fields=["reg_capital"])
 # print(data)
+
+from tradingagents.dataflows.interface import get_fundamentals_tushare
+
+data = get_fundamentals_tushare(symbol="600036.SH", cur_date="20260317", look_back_years=3)
+print(data)

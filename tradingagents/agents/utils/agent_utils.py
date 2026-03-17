@@ -306,13 +306,13 @@ class Toolkit:
     @tool
     def get_fundamentals_tushare(
         ticker: Annotated[str, "the company's ticker"],
-        curr_date: Annotated[str, "Current date in yyyy-mm-dd format"],
+        curr_date: Annotated[str, "Current date in yyyymmdd format"],
         look_back_years: Annotated[int, "How many years to look back"] = 5):
         """
-        Retrieve the latest fundamental information about a given stock on a given date by using OpenAI's news API.
+        Retrieve the latest fundamental information about a given stock on a given date by using tushare API, including company profile、basic company financials etc.
         Args:
             ticker (str): Ticker of a company. e.g. 600036.SH, 300119.SZ 
-            curr_date (str): Current date in yyyy-mm-dd format
+            curr_date (str): Current date in yyyymmdd format
             look_back_years (int): How many years to look back
         Returns:
             str: A formatted string containing the latest fundamental information about the company on the given date.

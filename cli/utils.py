@@ -244,6 +244,10 @@ def select_shallow_thinking_agent(provider) -> str:
         ],
         "zhipu": [
             ("GLM-4-Flash", "GLM-4-Flash-250414")
+        ],
+        "hunyuan": [
+            ("hunyuan-lite", "hunyuan-lite"),
+            ("hunyuan-a13b", "hunyuan-a13b")
         ]
     }
 
@@ -315,6 +319,9 @@ def select_deep_thinking_agent(provider) -> str:
         ],
         "zhipu": [
             ("GLM-4.7-Flash", "glm-4.7-flash")
+        ],
+        "hunyuan": [
+            ("hunyuan-a13b", "hunyuan-a13b")
         ]
     }
     
@@ -351,7 +358,8 @@ def select_llm_provider() -> tuple[str, str]:
         ("Google", "https://generativelanguage.googleapis.com/v1"),
         ("Openrouter", "https://openrouter.ai/api/v1"),
         ("Ollama", "http://localhost:11434/v1"),
-        ("Zhipu", "https://open.bigmodel.cn/api/paas/v4/")
+        ("Zhipu", "https://open.bigmodel.cn/api/paas/v4/"),
+        ("Hunyuan", "https://api.hunyuan.cloud.tencent.com/v1")
     ]
     
     choice = questionary.select(

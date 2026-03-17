@@ -746,6 +746,18 @@ def _get_company_profile(ticker):
 def get_fundamentals_tushare(symbol: Annotated[str, "Ticker symbol of the company"],
                              cur_date: Annotated[str, "Current date in yyyymmdd format"],
                              look_back_years: Annotated[int, "How many years to look back"]):
+    def safe_get_fund_item(data, item_name, index=0):
+        if len(data) <= 0:
+            return "N/A"
+        
+        if item_name not in data:
+            return "N/A"
+        
+        if index < len(data):
+            return "N/A"
+        
+        return data[item_name][index]
+        
     dt = pd.to_datetime(cur_date)
     start_date = dt - pd.DateOffset(years=look_back_years)
     start_date = start_date.strftime("%Y%m%d")
@@ -776,16 +788,16 @@ def get_fundamentals_tushare(symbol: Annotated[str, "Ticker symbol of the compan
 
     # Assets and Debt metrics 
     report += "### Assets and Debt Metrics\n"
-    report += f"- **Fixed Assets**: {data['fixed_assets'][0]}\n"
-    report += f"- **Cash Flow Per Stock**: {data['cfps'][0]}\n"
-    report += f"- **Debt to Assets**: {data['debt_to_assets'][0]}\n"
+    report += f"- **Fixed Assets**: {safe_get_fund_item(data, 'fixed_assets')}\n"
+    report += f"- **Cash Flow Per Stock**: {safe_get_fund_item(data, 'cfps')}\n"
+    report += f"- **Debt to Assets**: {safe_get_fund_item(data, 'debt_to_assets')}\n"
 
     # Profitability metrics
     report += "### Profitability Metrics\n"
-    report += f"- **EPS**: {data['eps'][0]}\n"
-    report += f"- **BPS**: {data['bps'][0]}\n"
+    report += f"- **EPS**: {safe_get_fund_item(data, 'eps')}\n"
+    report += f"- **BPS**: {safe_get_fund_item(data, 'bps')}\n"
     report += f"- **Gross Margin**: {data['gross_margin']}%\n"
-    report += f"- **Retained PS**: {data['retainedps'][0]}\n"
+    report += f"- **Retained PS**: {safe_get_fund_item(data, 'retainedps')}\n"
     # report += f"- **Return on Equity‌**: {data['roa']}%\n"
     report += f"- **Operating Income-on-year Growth rate**: {data['or_yoy']}%\n"
     report += f"- **Year-on-year Growth Rate of Operating Profit**: {data['op_yoy']}%\n\n"

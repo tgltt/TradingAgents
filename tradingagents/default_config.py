@@ -2,7 +2,7 @@ import os
 
 DEFAULT_CONFIG = {
     "project_dir": os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
-    "results_dir": os.getenv("TRADINGAGENTS_RESULTS_DIR", os.path.join("./", "output", "results")),
+    "results_dir": os.getenv("TRADINGAGENTS_RESULTS_DIR", os.path.join(".", "output", "results")),
     "data_dir": os.path.join(os.path.dirname(__file__), "..", "data"),
     "data_cache_dir": os.path.join(
         os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
