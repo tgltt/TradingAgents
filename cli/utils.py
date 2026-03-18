@@ -119,7 +119,7 @@ def get_ticker(market=None) -> str:
         if re.match(market['pattern'], ticker_to_check):
             # For A-shares, return pure numeric code
             if market['data_source'] == 'tongdaxin':
-                console.print(f"[green]✅ Valid A-share code: {ticker} (will use TongDaXin data source)[/green]")
+                console.print(f"[green]✅ Valid A-share code: {ticker} (will use Tushare data source)[/green]")
                 return ticker
             else:
                 console.print(f"[green]✅ Valid ticker: {ticker.upper()}[/green]")
@@ -127,6 +127,35 @@ def get_ticker(market=None) -> str:
         else:
             console.print(f"[red]❌ Invalid ticker format[/red]")
             console.print(f"[yellow]Please use correct format: {market['format']}[/yellow]")
+            
+
+def get_company_name(default_company_name) -> str:
+    """Prompt the user to enter company_name of the ticker symbol"""
+    company_name = questionary.text(
+                        "Enter company_name of the ticker symbol:",
+                        validate=lambda x: len(x.strip()) > 0 or "Please enter a valid company name.",
+                        default=default_company_name,
+                        style=questionary.Style(
+                            [
+                                ("text", "fg:green"),
+                                ("highlighted", "noinherit"),
+                            ]
+                        ),
+                    ).ask()
+
+    if not company_name:
+        from rich.console import Console
+        console = Console()
+        console.print("\n[red]No company name provided. Exiting...[/red]")
+        exit(1)
+    
+    from rich.console import Console
+    console = Console()
+    
+    company_name = company_name.strip() 
+    console.print(f"[green]✅ Valid company name: {company_name}[/green]")
+
+    return company_name
 
 
 def get_analysis_date(console):

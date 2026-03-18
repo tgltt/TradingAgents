@@ -449,22 +449,33 @@ def get_user_selections():
         )
     )
     selected_ticker = get_ticker(selected_market)
+    
+    # Step 3: Company name
+    default_company_name = "招商银行"
+    console.print(
+        create_question_box(
+            "Step 3: Company name",
+            f"Enter {selected_ticker}'s company name",
+            default_company_name
+        )
+    )
+    selected_company = get_company_name(default_company_name)
 
-    # Step 3: Analysis date
+    # Step 4: Analysis date
     default_date = datetime.datetime.now().strftime("%Y%m%d")
     console.print(
         create_question_box(
-            "Step 3: Analysis Date",
+            "Step 4: Analysis Date",
             "Enter the analysis date (YYYYMMDD)",
             default_date,
         )
     )
     analysis_date = get_analysis_date(console=console)
 
-    # Step 4: Select analysts
+    # Step 5: Select analysts
     console.print(
         create_question_box(
-            "Step 4: Analysts Team", "Select your LLM analyst agents for the analysis"
+            "Step 5: Analysts Team", "Select your LLM analyst agents for the analysis"
         )
     )
     selected_analysts = select_analysts()
@@ -472,26 +483,26 @@ def get_user_selections():
         f"[green]Selected analysts:[/green] {', '.join(analyst.value for analyst in selected_analysts)}"
     )
 
-    # Step 5: Research depth
+    # Step 6: Research depth
     console.print(
         create_question_box(
-            "Step 5: Research Depth", "Select your research depth level"
+            "Step 6: Research Depth", "Select your research depth level"
         )
     )
     selected_research_depth = select_research_depth()
 
-    # Step 6: LLM Provider
+    # Step 7: LLM Provider
     console.print(
         create_question_box(
-            "Step 6: LLM Provider", "Select your LLM provider"
+            "Step 7: LLM Provider", "Select your LLM provider"
         )
     )
     selected_llm_provider, backend_url = select_llm_provider()
     
-    # Step 7: Thinking agents
+    # Step 8: Thinking agents
     console.print(
         create_question_box(
-            "Step 7: Thinking Agents", "Select your thinking agents for analysis"
+            "Step 8: Thinking Agents", "Select your thinking agents for analysis"
         )
     )
     selected_shallow_thinker = select_shallow_thinking_agent(selected_llm_provider)
@@ -500,6 +511,7 @@ def get_user_selections():
     return {
         "market": selected_market,
         "ticker": selected_ticker,
+        "company_name": selected_company,
         "analysis_date": analysis_date,
         "analysts": selected_analysts,
         "research_depth": selected_research_depth,
@@ -826,13 +838,13 @@ def run_analysis():
 
         # Create spinner text
         spinner_text = (
-            f"Analyzing {selections['ticker']} on {selections['analysis_date']}..."
+            f"Analyzing {selections['ticker']} {selections["company_name"]} on {selections['analysis_date']}..."
         )
         update_display(layout, spinner_text)
 
         # Initialize state and get graph args
         init_agent_state = graph.propagator.create_initial_state(
-            selections["ticker"], selections["analysis_date"]
+            selections["company_name"], selections["ticker"], selections["analysis_date"]
         )
         args = graph.propagator.get_graph_args()
 
