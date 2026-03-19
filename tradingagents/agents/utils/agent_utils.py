@@ -122,18 +122,18 @@ class Toolkit:
     @staticmethod
     @tool
     def get_tushare_tech_data_offline(
-        symbol: Annotated[str, "ticker symbol of the company"],
+        symbol: Annotated[str, "公司代码"],
         start_date: Annotated[str, "Start date in yyyymmdd format"],
         end_date: Annotated[str, "End date in yyyymmdd format"],
     ) -> str:
         """
-        Retrieve the stock price data for a given stock symbol from TuShare.
-        Args:
-            symbol (str): ticker symbol of the company, e.g. 600036.SH, 300119.SZ
-            start_date (str): Start date in yyyymmdd format
-            end_date (str): End date in yyyymmdd format
-        Returns:
-            str: A formatted dataframe containing the stock price data for the specified stock symbol in the specified date range.
+        从本地缓存，检索指定上市公司的股价数据.
+        参数:
+            symbol (str): 公司代码, e.g. 600036.SH, 300119.SZ
+            start_date (str): 开始日期，格式为yyyymmdd
+            end_date (str): 结束日期，格式为yyyymmdd
+        返回值:
+            str: 一个格式化的dataframe，其中包含指定股票代码在指定日期范围内的股价数据。
         """
 
         result_data = interface.get_tushare_tech_data_offline(symbol, start_date, end_date)
@@ -143,18 +143,18 @@ class Toolkit:
     @staticmethod
     @tool
     def get_tushare_tech_data_online(
-        symbol: Annotated[str, "ticker symbol of the company"],
+        symbol: Annotated[str, "公司代码"],
         start_date: Annotated[str, "Start date in yyyymmdd format"],
         end_date: Annotated[str, "End date in yyyymmdd format"],
     ) -> str:
         """
-        Retrieve the stock price data for a given stock symbol from TuShare.
-        Args:
-            symbol (str): ticker symbol of the company, e.g. 600036.SH, 300119.SZ
-            start_date (str): Start date in yyyymmdd format
-            end_date (str): End date in yyyymmdd format
-        Returns:
-            str: A formatted dataframe containing the stock price data for the specified stock symbol in the specified date range.
+        调用TuShare接口，检索指定上市公司的股价数据.
+        参数:
+            symbol (str): 公司代码, e.g. 600036.SH, 300119.SZ
+            start_date (str): 开始日期，格式为yyyymmdd
+            end_date (str): 结束日期，格式为yyyymmdd
+        返回值:
+            str: 一个格式化的dataframe，其中包含指定股票代码在指定日期范围内的股价数据。
         """
 
         result_data = interface.get_tushare_tech_data_online(symbol, start_date, end_date)
@@ -165,24 +165,24 @@ class Toolkit:
     @staticmethod
     @tool
     def get_stockstats_indicators_report_offline(
-        symbol: Annotated[str, "ticker symbol of the company"],
+        symbol: Annotated[str, "公司代码"],
         indicator: Annotated[
-            str, "technical indicator to get the analysis and report of"
+            str, "待分析的技术指标"
         ],
         curr_date: Annotated[
-            str, "The current trading date you are trading on, YYYYmmdd"
+            str, "当前交易日期, 格式为YYYYmmdd"
         ],
-        look_back_days: Annotated[int, "how many days to look back"] = 30,
+        look_back_days: Annotated[int, "向前回溯的天数"] = 30,
     ) -> str:
         """
-        Retrieve stock stats indicators for a given ticker symbol and indicator.
-        Args:
-            symbol (str): Ticker symbol of the company, e.g. AAPL, TSM
-            indicator (str): Technical indicator to get the analysis and report of
-            curr_date (str): The current trading date you are trading on, YYYYmmdd
-            look_back_days (int): How many days to look back, default is 30
-        Returns:
-            str: A formatted dataframe containing the stock stats indicators for the specified ticker symbol and indicator.
+        根据给定的公司代码和技术指标，离线获取本地缓存的股价数据，并计算出相应的技术指标数值。
+        参数:
+            symbol (str): 公司代码, e.g. 600036.SH, 300119.SZ 
+            indicator (str): 将要计算和分析的技术指标
+            curr_date (str): 当前交易日期, 格式为YYYYmmdd
+            look_back_days (int): 向前回溯的天数
+        返回值:
+            str: 一个格式化的dataframe，其中包含指定股票代码和指标的相关统计数据。
         """
 
         result_stockstats = interface.get_stock_stats_indicators_window(
@@ -194,24 +194,24 @@ class Toolkit:
     @staticmethod
     @tool
     def get_stockstats_indicators_report_online(
-        symbol: Annotated[str, "ticker symbol of the company"],
+        symbol: Annotated[str, "公司代码"],
         indicator: Annotated[
-            str, "technical indicator to get the analysis and report of"
+            str, "待分析的技术指标"
         ],
         curr_date: Annotated[
-            str, "The current trading date you are trading on, YYYYmmdd"
+            str, "当前交易日期, 格式为YYYYmmdd"
         ],
-        look_back_days: Annotated[int, "how many days to look back"] = 30,
+        look_back_days: Annotated[int, "向前回溯的天数"] = 30,
     ) -> str:
         """
-        Retrieve stock stats indicators for a given ticker symbol and indicator.
-        Args:
-            symbol (str): Ticker symbol of the company, e.g. AAPL, TSM
-            indicator (str): Technical indicator to get the analysis and report of
-            curr_date (str): The current trading date you are trading on, YYYYmmdd
-            look_back_days (int): How many days to look back, default is 30
-        Returns:
-            str: A formatted dataframe containing the stock stats indicators for the specified ticker symbol and indicator.
+        根据给定的公司代码和技术指标，在线获取股价数据并计算出相应的技术指标数值。
+        参数:
+            symbol (str): 公司代码, e.g. 600036.SH, 300119.SZ 
+            indicator (str): 将要计算和分析的技术指标
+            curr_date (str): 当前交易日期, 格式为YYYYmmdd
+            look_back_days (int): 向前回溯的天数
+        返回值:
+            str: 一个格式化的dataframe，其中包含指定股票代码和指标的相关统计数据。
         """
 
         result_stockstats = interface.get_stock_stats_indicators_window(
@@ -269,13 +269,13 @@ class Toolkit:
     @tool
     def get_stock_news_zhipu(
         ticker: Annotated[str, "the company's ticker"],
-        curr_date: Annotated[str, "Current date in yyyy-mm-dd format"],
+        curr_date: Annotated[str, "Current date in yyyymmdd format"],
     ):
         """
         Retrieve the latest news about a given stock by using Zhipu AI's news API.
         Args:
             ticker (str): Ticker of a company. e.g. 600036.SH, 300119.SZ 
-            curr_date (str): Current date in yyyy-mm-dd format
+            curr_date (str): Current date in yyyymmdd format
         Returns:
             str: A formatted string containing the latest news about the company on the given date.
         """
@@ -287,12 +287,12 @@ class Toolkit:
     @staticmethod
     @tool
     def get_global_news_zhipu(
-        curr_date: Annotated[str, "Current date in yyyy-mm-dd format"],
+        curr_date: Annotated[str, "Current date in yyyymmdd format"],
     ):
         """
         Retrieve the latest macroeconomics news on a given date using Zhipu AI's macroeconomics news API.
         Args:
-            curr_date (str): Current date in yyyy-mm-dd format
+            curr_date (str): Current date in yyyymmdd format
         Returns:
             str: A formatted string containing the latest macroeconomic news on the given date.
         """
@@ -305,17 +305,18 @@ class Toolkit:
     @staticmethod
     @tool
     def get_fundamentals_tushare(
-        ticker: Annotated[str, "the company's ticker"],
-        curr_date: Annotated[str, "Current date in yyyymmdd format"],
-        look_back_years: Annotated[int, "How many years to look back"] = 5):
+        ticker: Annotated[str, "公司代码"],
+        curr_date: Annotated[str, "当前日期，格式为yyyymmdd"],
+        look_back_years: Annotated[int, "向前回溯的年份数"] = 5):
         """
-        Retrieve the latest fundamental information about a given stock on a given date by using tushare API, including company profile、basic company financials etc.
-        Args:
-            ticker (str): Ticker of a company. e.g. 600036.SH, 300119.SZ 
-            curr_date (str): Current date in yyyymmdd format
-            look_back_years (int): How many years to look back
-        Returns:
-            str: A formatted string containing the latest fundamental information about the company on the given date.
+        使用Tushare接口获取指定股票在特定日期的最新基本面信息，包括公司概况、基本财务数据等。
+
+        参数:
+            ticker (str): 公司代码， e.g. 600036.SH, 300119.SZ 
+            curr_date (str): 当前日期，格式为yyyymmdd
+            look_back_years (int): 向前回溯的年份数
+        返回值:
+            str: 一个格式化的字符串，包含该公司在指定日期的最新基本面信息。
         """
 
         openai_fundamentals_results = interface.get_fundamentals_tushare(

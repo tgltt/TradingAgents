@@ -542,7 +542,7 @@ def get_stock_stats_indicators_window(
                                                   end_date=end_date,
                                                   look_back_days=look_back_days + 365)
     
-        if len(data) > 0:
+        if data is not None and len(data) > 0:
             data = data[["trade_date", "open", "high", "low", "close", "vol"]]
             data = data.rename(columns={"trade_date": "date", "vol": "volume"})
             
@@ -557,7 +557,7 @@ def get_stock_stats_indicators_window(
             
             print(f"Saved {save_output}")
             
-    if len(data) <= 0:
+    if data is None or len(data) <= 0:
         indicator_value = f"No data found for symbol '{symbol}' between {before} and {end_date}"      
     else:
         indicator_value = ""
