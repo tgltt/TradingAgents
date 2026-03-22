@@ -338,5 +338,95 @@
     "cost": 0.0,
     "session_id": "dashscope_3169",
     "analysis_type": "stock_analysis"
+  },
+  {
+    "timestamp": "2026-03-21T20:11:01.398210",
+    "provider": "dashscope",
+    "model_name": "qwen-turbo",
+    "input_tokens": 1230,
+    "output_tokens": 1502,
+    "cost": 0.011472,
+    "session_id": "dashscope_868",
+    "analysis_type": "stock_analysis"
+  },
+  {
+    "timestamp": "2026-03-21T20:11:16.936018",
+    "provider": "dashscope",
+    "model_name": "qwen-turbo",
+    "input_tokens": 1783,
+    "output_tokens": 1329,
+    "cost": 0.01154,
+    "session_id": "dashscope_7494",
+    "analysis_type": "stock_analysis"
+  },
+  {
+    "timestamp": "2026-03-21T20:11:37.882940",
+    "provider": "dashscope",
+    "model_name": "qwen-turbo",
+    "input_tokens": 4463,
+    "output_tokens": 1500,
+    "cost": 0.017926,
+    "session_id": "dashscope_8723",
+    "analysis_type": "stock_analysis"
+  },
+  {
+    "timestamp": "2026-03-21T20:12:16.341023",
+    "provider": "dashscope",
+    "model_name": "qwen-plus",
+    "input_tokens": 3071,
+    "output_tokens": 1403,
+    "cost": 0.0,
+    "session_id": "dashscope_1385",
+    "analysis_type": "stock_analysis"
+  },
+  {
+    "timestamp": "2026-03-21T20:12:19.997944",
+    "provider": "dashscope",
+    "model_name": "qwen-turbo",
+    "input_tokens": 1596,
+    "output_tokens": 210,
+    "cost": 0.004452,
+    "session_id": "dashscope_8631",
+    "analysis_type": "stock_analysis"
+  },
+  {
+    "timestamp": "2026-03-21T20:12:29.982282",
+    "provider": "dashscope",
+    "model_name": "qwen-turbo",
+    "input_tokens": 2049,
+    "output_tokens": 743,
+    "cost": 0.008556,
+    "session_id": "dashscope_9789",
+    "analysis_type": "stock_analysis"
+  },
+  {
+    "timestamp": "2026-03-21T20:12:37.591734",
+    "provider": "dashscope",
+    "model_name": "qwen-turbo",
+    "input_tokens": 3522,
+    "output_tokens": 578,
+    "cost": 0.010512,
+    "session_id": "dashscope_9430",
+    "analysis_type": "stock_analysis"
+  },
+  {
+    "timestamp": "2026-03-21T20:12:45.518533",
+    "provider": "dashscope",
+    "model_name": "qwen-turbo",
+    "input_tokens": 4660,
+    "output_tokens": 650,
+    "cost": 0.01322,
+    "session_id": "dashscope_4427",
+    "analysis_type": "stock_analysis"
+  },
+  {
+    "timestamp": "2026-03-21T20:13:38.240168",
+    "provider": "dashscope",
+    "model_name": "qwen-plus",
+    "input_tokens": 3671,
+    "output_tokens": 2000,
+    "cost": 0.0,
+    "session_id": "dashscope_9130",
+    "analysis_type": "stock_analysis"
   }
 ]

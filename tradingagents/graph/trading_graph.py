@@ -84,14 +84,13 @@ class TradingAgentsGraph:
         )
         
         # Initialize LLMs
+        tag_logger.info(f"Initialize LLM, deep_thinking_llm: model={self.config['deep_think_llm']}, quick_thinking_llm: model={self.config['quick_think_llm']}")
+        
         config_llm_provider = self.config["llm_provider"].lower()
         if config_llm_provider in ["openai", "zhipu", "hunyuan", "ollama", "openrouter"]:
             api_key = self._get_api_key(config_llm_provider)
             self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"], api_key=api_key, callbacks=[LogCallBackHandler()])
             self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"], api_key=api_key, callbacks=[LogCallBackHandler()])
-            
-            tag_logger.info(f"Initialize LLM, deep_thinking_llm: model={self.deep_thinking_llm.model}, openai_api_base={self.deep_thinking_llm.openai_api_base}, "
-                            f"quick_thinking_llm: model={self.quick_thinking_llm.model}, openai_api_base={self.quick_thinking_llm.openai_api_base}")
         elif config_llm_provider == "anthropic":
             self.deep_thinking_llm = ChatAnthropic(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
             self.quick_thinking_llm = ChatAnthropic(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])

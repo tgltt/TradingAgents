@@ -23,6 +23,12 @@ from rich import box
 from rich.align import Align
 from rich.rule import Rule
 
+import os
+import sys
+
+sys.path.append(os.getcwd())
+print(sys.path)
+
 import tradingagents
 
 from tradingagents.graph.trading_graph import TradingAgentsGraph
