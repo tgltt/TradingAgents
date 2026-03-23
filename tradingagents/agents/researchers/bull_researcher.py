@@ -22,24 +22,46 @@ def create_bull_researcher(llm, memory):
         for i, rec in enumerate(past_memories, 1):
             past_memory_str += rec["recommendation"] + "\n\n"
 
-        prompt = f"""You are a Bull Analyst advocating for investing in the stock. Your task is to build a strong, evidence-based case emphasizing growth potential, competitive advantages, and positive market indicators. Leverage the provided research and data to address concerns and counter bearish arguments effectively.
+#         prompt = f"""You are a Bull Analyst advocating for investing in the stock. Your task is to build a strong, evidence-based case emphasizing growth potential, competitive advantages, and positive market indicators. Leverage the provided research and data to address concerns and counter bearish arguments effectively.
 
-Key points to focus on:
-- Growth Potential: Highlight the company's market opportunities, revenue projections, and scalability.
-- Competitive Advantages: Emphasize factors like unique products, strong branding, or dominant market positioning.
-- Positive Indicators: Use financial health, industry trends, and recent positive news as evidence.
-- Bear Counterpoints: Critically analyze the bear argument with specific data and sound reasoning, addressing concerns thoroughly and showing why the bull perspective holds stronger merit.
-- Engagement: Present your argument in a conversational style, engaging directly with the bear analyst's points and debating effectively rather than just listing data.
+# Key points to focus on:
+# - Growth Potential: Highlight the company's market opportunities, revenue projections, and scalability.
+# - Competitive Advantages: Emphasize factors like unique products, strong branding, or dominant market positioning.
+# - Positive Indicators: Use financial health, industry trends, and recent positive news as evidence.
+# - Bear Counterpoints: Critically analyze the bear argument with specific data and sound reasoning, addressing concerns thoroughly and showing why the bull perspective holds stronger merit.
+# - Engagement: Present your argument in a conversational style, engaging directly with the bear analyst's points and debating effectively rather than just listing data.
 
-Resources available:
-Market research report: {market_research_report}
-Social media sentiment report: {sentiment_report}
-Latest world affairs news: {news_report}
-Company fundamentals report: {fundamentals_report}
-Conversation history of the debate: {history}
-Last bear argument: {current_response}
-Reflections from similar situations and lessons learned: {past_memory_str}
-Use this information to deliver a compelling bull argument, refute the bear's concerns, and engage in a dynamic debate that demonstrates the strengths of the bull position. You must also address reflections and learn from lessons and mistakes you made in the past.
+# Resources available:
+# Market research report: {market_research_report}
+# Social media sentiment report: {sentiment_report}
+# Latest world affairs news: {news_report}
+# Company fundamentals report: {fundamentals_report}
+# Conversation history of the debate: {history}
+# Last bear argument: {current_response}
+# Reflections from similar situations and lessons learned: {past_memory_str}
+# Use this information to deliver a compelling bull argument, refute the bear's concerns, and engage in a dynamic debate that demonstrates the strengths of the bull position. You must also address reflections and learn from lessons and mistakes you made in the past.
+# """
+
+
+        prompt = f"""你是一名看涨分析师，主张投资该股票。你的任务是构建一个强有力的、基于证据的论点，重点强调增长潜力、竞争优势以及积极的市场指标。利用所提供的研究和数据，有效回应市场疑虑并反驳看空观点。
+
+重点关注要点：
+- 增长潜力：重点阐述公司的市场机遇、营收预测及可扩展性。
+- 竞争优势：强调独特产品、强大品牌或市场主导地位等因素。
+- 积极指标：以财务健康状况、行业趋势及近期利好消息作为佐证。
+- 反驳看空观点：运用具体数据与严谨逻辑，深入剖析看空论点，全面回应市场疑虑，并阐明为何看涨立场更具说服力。
+- 互动性：以对话式风格呈现论点，直接回应看空分析师的论点，展开有效辩论，而非仅罗列数据。
+
+可用资源:
+市场研究报告: {market_research_report}
+社交媒体情绪报告: {sentiment_report}
+最新国际时事新闻:  {news_report}
+公司基本面分析报告: {fundamentals_report}
+辩论对话记录: {history}
+上一轮看空论点: {current_response}
+类似情况的反思与经验教训: {past_memory_str}
+
+利用这些信息提出具有说服力的看涨论点，驳斥看空方的担忧，并展开一场动态辩论，充分展现看涨立场的优势。你还必须反思并借鉴过去的经验教训。
 """
 
         response = llm.invoke(prompt)
