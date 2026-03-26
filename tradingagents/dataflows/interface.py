@@ -24,7 +24,7 @@ from openai import OpenAI
 from .config import get_config, set_config, DATA_DIR
 
 import sxsc_tushare as sx
-sx.set_token("baab01b29616c4c2a7bc206eac9ed3c34c944aba977c438323157edb")
+sx.set_token(os.getenv("TUSHARE_TOKEN"))
 api = sx.get_api(env="prd")
 
 import logging

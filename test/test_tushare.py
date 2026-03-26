@@ -1,11 +1,12 @@
 from typing import Annotated, Dict
+import os
 from datetime import datetime
 import pandas as pd
 
 import yfinance as yf
 
 import sxsc_tushare as sx
-sx.set_token("baab01b29616c4c2a7bc206eac9ed3c34c944aba977c438323157edb")
+sx.set_token(os.getenv("TUSHARE_TOKEN"))
 api = sx.get_api(env="prd")
 
 def get_tushare_tech_data_online(
