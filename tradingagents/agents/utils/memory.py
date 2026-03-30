@@ -51,7 +51,7 @@ class FinancialSituationMemory:
             self.embedding = "Embedding-3"
             self.client = OpenAI(base_url=config["backend_url"], api_key=os.getenv("ZHIPU_API_KEY"))
         elif self.llm_provider == "hunyuan":
-            self.embedding = "Hunyuan-embedding"
+            self.embedding = "hunyuan-embedding"
             self.client = OpenAI(base_url=config["backend_url"], api_key=os.getenv("HUNYUAN_API_KEY"))
         elif self.llm_provider == "google":
             # Google AI uses DashScope embedding if available, otherwise OpenAI

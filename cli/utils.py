@@ -350,7 +350,8 @@ def select_deep_thinking_agent(provider) -> str:
             ("GLM-4.7-Flash", "glm-4.7-flash")
         ],
         "hunyuan": [
-            ("hunyuan-a13b", "hunyuan-a13b")
+            ("hunyuan-a13b", "hunyuan-a13b"),
+            ("hunyuan-t1-latest", "hunyuan-t1-latest")
         ]
     }
     
