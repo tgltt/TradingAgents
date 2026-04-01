@@ -1,7 +1,8 @@
+import os
 from zai import ZhipuAiClient
 
 # 初始化客户端
-client = ZhipuAiClient(api_key="b93eb0e6ae9f9f3ce3bb7f53a802f077.IS6hR3vAeY5xxhZC")
+client = ZhipuAiClient(api_key=os.getenv("ZHIPU_API_KEY"))
 
 # 创建聊天完成请求
 response = client.chat.completions.create(
