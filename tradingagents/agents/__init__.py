@@ -19,6 +19,7 @@ from .managers.risk_manager import create_risk_manager
 
 from .trader.trader import create_trader
 
+
 __all__ = [
     "FinancialSituationMemory",
     "Toolkit",

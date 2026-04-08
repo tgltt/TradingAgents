@@ -264,6 +264,27 @@ class Toolkit:
         google_news_results = interface.get_google_news(query, curr_date, 7)
 
         return google_news_results
+    
+
+    @staticmethod
+    @tool
+    def get_stock_news_sina(
+        ticker: Annotated[str, "the company's ticker"],
+        curr_date: Annotated[str, "Current date in yyyymmdd format"],
+    ):
+        """
+        Retrieve the latest news about a given stock by visiting sina financial website.
+        Args:
+            ticker (str): Ticker of a company. e.g. 600036.SH, 300119.SZ 
+            curr_date (str): Current date in yyyymmdd format
+        Returns:
+            str: A formatted string containing the latest news about the company on the given date.
+        """
+
+        news_results = interface.get_stock_news_sina(ticker, curr_date)
+
+        return news_results
+
 
     @staticmethod
     @tool

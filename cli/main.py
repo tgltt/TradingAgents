@@ -27,7 +27,6 @@ import os
 import sys
 
 sys.path.append(os.getcwd())
-print(sys.path)
 
 import tradingagents
 
@@ -1116,3 +1115,15 @@ def analyze():
 
 if __name__ == "__main__":
     app()
+
+    # import os
+    # import sys
+
+    # # sys.path.append(os.getcwd())
+    # print("=================", os.getcwd())
+
+    
+    # from tradingagents.agents.utils.agent_utils import Toolkit
+
+    # toolkit = Toolkit()
+    # toolkit.get_stock_news_sina(ticker="600036.SH", curr_date="20260408")

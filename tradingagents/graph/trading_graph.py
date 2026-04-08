@@ -188,8 +188,9 @@ class TradingAgentsGraph:
             "news": ToolNode(
                 [
                     # online tools
-                    self.toolkit.get_global_news_zhipu,
-                    self.toolkit.get_google_news,
+                    self.toolkit.get_stock_news_sina
+                    # self.toolkit.get_global_news_zhipu,
+                    # self.toolkit.get_google_news,
                     # offline tools
                 ]
             ),

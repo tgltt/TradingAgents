@@ -5,6 +5,7 @@ from .reddit_utils import fetch_top_from_category
 from .yfin_utils import *
 from .stockstats_utils import *
 from .googlenews_utils import *
+from .sina_news_utils import get_company_news
 
 # Import Chinese finance utilities if available
 try:
@@ -654,6 +655,13 @@ def _get_tushare_tech_data (
     header += f"# Data retrieved on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
 
     return header + csv_string
+
+
+def get_stock_news_sina(ticker, curr_date):
+    ticker = ticker[7:] + ticker[:6]
+    news_list = get_company_news(stock_code=ticker, start_date=curr_date)
+
+    return "\n\n".join([news["new_tile"] + "\n" + news["new_date"] + "\n" + news["new_content"] for news in news_list])
 
 
 def get_stock_news_zhipu(ticker, curr_date):

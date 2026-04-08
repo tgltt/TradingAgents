@@ -21,16 +21,25 @@ def get_company_news_list_sina(stock_code, start_date, end_date, max_count=10):
     if common_utils.is_empty(start_date):
         start_date = datetime.now().strftime("%Y%m%d")
     
-    if common_utils.is_empty(end_date) <= 0:
+    if common_utils.is_empty(end_date):
         # 如无指定结束日期，则默认为start_date的7天后
         end_date = datetime.strptime(start_date, "%Y%m%d") + timedelta(days=7)
-
-    url = f"https://vip.stock.finance.sina.com.cn/corp/go.php/vCB_AllNewsStock/symbol/{stock_code}.phtml"
+        end_date = datetime.strftime(end_date, "%Y%m%d")
+    
+    start_date_value = datetime.strptime(start_date, "%Y%m%d")
+    end_date_value = datetime.strptime(end_date, "%Y%m%d")
 
     news_list = []
+
+    news_window_size = (end_date_value - start_date_value).days
+    if news_window_size <= 0:
+        return news_list
+
+    url = f"https://vip.stock.finance.sina.com.cn/corp/go.php/vCB_AllNewsStock/symbol/{stock_code.lower()}.phtml"
+
     cur_page = 1
     while (True):
-        cur_url = url + f"page={cur_page}"
+        cur_url = url + f"?page={cur_page}"
         response = requests.get(cur_url)
 
         if response.status_code != 200:
@@ -51,24 +60,42 @@ def get_company_news_list_sina(stock_code, start_date, end_date, max_count=10):
             print(f"Found no {stock_code} news.")
             return []
         
-        items = data[0].find_all("a")
+        items = data[0].find_all("ul")
         if len(items) <= 0:
             print(f"Found no {stock_code} news.")
             # 若当前请求返回无内容，则返回已解析的文档列表内容
-            return news_list       
-        
+            return news_list
+
+        item_contents = [str(item_content) for item_content in items[0].contents]
+        items = ("".join(item_contents)).split("<br/>")
         for item in items:
-            news_date = item.get("")
-            if common_utils.is_empty(news_date) or news_date < start_date or news_date > end_date:
+            new_date_end_index = item.find("<a ")
+            if new_date_end_index < 0:
                 continue
 
-            news_title = item.text
-            news_link = item.get("href")
+            news_date = item[:new_date_end_index].strip().replace("-", "")[:8]
+            if common_utils.is_empty(news_date):
+                continue
+
+            if news_date > end_date:
+                continue
+
+            if news_date < start_date:
+                # 当前新闻已超出待提取新闻列表的时间窗口下限
+                return news_list
+
+            item_soup = BeautifulSoup(markup=item, features="html.parser")
+            news = item_soup.find_all("a")
+            if len(news) <= 0:
+                continue
+
+            news_title = news[0].text
+            news_link = news[0].get("href")
             
             if not news_link.startswith(url_component.scheme):
                 news_link = url_component.scheme + "://" + url_component.netloc + news_link
             
-            news_list.append((news_title, news_link))
+            news_list.append((news_title, news_date, news_link))
             
             if len(news_list) >= max_count:
                 # 已达最大新闻数，直接返回
@@ -109,7 +136,7 @@ def get_company_new_detail_sina(new_url):
     return new_content[0].get_text("\n").strip()
     
 
-def get_company_news(stock_code, start_date, end_date, max_count=10):
+def get_company_news(stock_code, start_date, end_date=None, max_count=10):
     """
     获取上市公司最新新闻，目前只读取新浪财经股票新闻第一页的新闻列表。
     Args:
@@ -129,13 +156,19 @@ def get_company_news(stock_code, start_date, end_date, max_count=10):
         return ""
     
     news_contents = []
-    for new_tile, new_url in news_list:
+    for new_tile, new_date, new_url in news_list:
         new_content = get_company_new_detail_sina(new_url)
         if common_utils.is_empty(new_content):
             print("new_content is none or empty, new_tile={new_tile}, new_url={new_url}")
             continue
 
-        news_contents.append((new_tile, new_content))
+        news_contents.append({"new_tile": new_tile, "new_date": new_date, "new_content": new_content})
 
     return news_contents
 
+
+
+if __name__ == "__main__":
+    # news_list = get_company_news(stock_code="SZ002403", start_date="20260301", end_date="20260407", max_count=1)
+    # print(news_list)
+    pass
