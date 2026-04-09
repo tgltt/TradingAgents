@@ -58,6 +58,7 @@ class MessageBuffer:
             "Market Analyst": "pending",
             "Social Analyst": "pending",
             "News Analyst": "pending",
+            "Bulletins Analyst": "pending",
             "Fundamentals Analyst": "pending",
             # Research Team
             "Bull Researcher": "pending",
@@ -77,6 +78,7 @@ class MessageBuffer:
             "market_report": None,
             "sentiment_report": None,
             "news_report": None,
+            "bulletins_report": None,
             "fundamentals_report": None,
             "investment_plan": None,
             "trader_investment_plan": None,
@@ -118,6 +120,7 @@ class MessageBuffer:
                 "market_report": "Market Analysis",
                 "sentiment_report": "Social Sentiment",
                 "news_report": "News Analysis",
+                "bulletins_report": "Bulletins Analysis",
                 "fundamentals_report": "Fundamentals Analysis",
                 "investment_plan": "Research Team Decision",
                 "trader_investment_plan": "Trading Team Plan",
@@ -140,6 +143,7 @@ class MessageBuffer:
                 "market_report",
                 "sentiment_report",
                 "news_report",
+                "bulletins_report",
                 "fundamentals_report",
             ]
         ):
@@ -155,6 +159,10 @@ class MessageBuffer:
             if self.report_sections["news_report"]:
                 report_parts.append(
                     f"### News Analysis\n{self.report_sections['news_report']}"
+                )
+            if self.report_sections["bulletins_report"]:
+                report_parts.append(
+                    f"### Bulletins Analysis\n{self.report_sections['bulletins_report']}"
                 )
             if self.report_sections["fundamentals_report"]:
                 report_parts.append(
@@ -231,6 +239,7 @@ def update_display(layout, spinner_text=None):
             "Market Analyst",
             "Social Analyst",
             "News Analyst",
+            "Bulletins Analyst",
             "Fundamentals Analyst",
         ],
         "Research Team": ["Bull Researcher", "Bear Researcher", "Research Manager"],
@@ -911,6 +920,17 @@ def run_analysis():
                         "news_report", chunk["news_report"]
                     )
                     message_buffer.update_agent_status("News Analyst", "completed")
+                    # Set next analyst to in_progress
+                    if "bulletins" in selections["analysts"]:
+                        message_buffer.update_agent_status(
+                            "Bulletins Analyst", "in_progress"
+                        )
+
+                if "bulletins_report" in chunk and chunk["bulletins_report"]:
+                    message_buffer.update_report_section(
+                        "bulletins_report", chunk["bulletins_report"]
+                    )
+                    message_buffer.update_agent_status("Bulletins Analyst", "completed")
                     # Set next analyst to in_progress
                     if "fundamentals" in selections["analysts"]:
                         message_buffer.update_agent_status(

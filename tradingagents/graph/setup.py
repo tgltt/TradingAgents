@@ -81,6 +81,13 @@ class GraphSetup:
             delete_nodes["news"] = create_msg_delete()
             tool_nodes["news"] = self.tool_nodes["news"]
 
+        if "bulletins" in selected_analysts:
+            analyst_nodes["bulletins"] = create_bulletins_analyst(
+                self.quick_thinking_llm, self.toolkit
+            )
+            delete_nodes["bulletins"] = create_msg_delete()
+            tool_nodes["bulletins"] = self.tool_nodes["bulletins"]
+
         if "fundamentals" in selected_analysts:
             analyst_nodes["fundamentals"] = create_fundamentals_analyst(
                 self.quick_thinking_llm, self.toolkit

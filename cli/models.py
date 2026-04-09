@@ -7,4 +7,5 @@ class AnalystType(str, Enum):
     MARKET = "market"
     SOCIAL = "social"
     NEWS = "news"
+    BULLETINS = "bulletins"
     FUNDAMENTALS = "fundamentals"

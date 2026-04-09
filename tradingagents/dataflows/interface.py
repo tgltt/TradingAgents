@@ -5,7 +5,7 @@ from .reddit_utils import fetch_top_from_category
 from .yfin_utils import *
 from .stockstats_utils import *
 from .googlenews_utils import *
-from .sina_news_utils import get_company_news
+from .sina_stock_utils import get_company_news, get_company_bulletins
 
 # Import Chinese finance utilities if available
 try:
@@ -32,6 +32,7 @@ import logging
 from tradingagents.log.log import TRADING_AGENTS_GRAPH
 tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
 
+from tradingagents.utils import common_utils
 
 def get_finnhub_news(
     ticker: Annotated[
@@ -640,14 +641,16 @@ def _get_tushare_tech_data (
     start_date: Annotated[str, "Start date in yyyymmdd format"],
     end_date: Annotated[str, "End date in yyyymmdd format"],
 ):
-    selected_columns = ["trade_date", "open", "high", "low", "close", "vol", "amount"]
-    data = data[selected_columns]
-    data = data.rename(columns={"trade_date": "date", "vol": "volumn"})
-    
-    data = data[data["date"].astype(str) >= start_date]
-    
-    # Convert DataFrame to CSV string
-    csv_string = data.to_csv(index=False)
+    csv_string = ""
+    if not common_utils.is_empty(data):
+        selected_columns = ["trade_date", "open", "high", "low", "close", "vol", "amount"]
+        data = data[selected_columns]
+        data = data.rename(columns={"trade_date": "date", "vol": "volumn"})
+        
+        data = data[data["date"].astype(str) >= start_date]
+        
+        # Convert DataFrame to CSV string
+        csv_string = data.to_csv(index=False)
 
     # Add header information
     header = f"# Stock data for {symbol.upper()} from {start_date} to {end_date}\n"
@@ -661,7 +664,14 @@ def get_stock_news_sina(ticker, curr_date):
     ticker = ticker[7:] + ticker[:6]
     news_list = get_company_news(stock_code=ticker, start_date=curr_date)
 
-    return "\n\n".join([news["new_tile"] + "\n" + news["new_date"] + "\n" + news["new_content"] for news in news_list])
+    return "\n\n".join([news["info_title"] + "\n" + news["info_date"] + "\n" + news["info_content"] for news in news_list])
+
+
+def get_stock_bulletins_sina(ticker, curr_date):
+    ticker = ticker[7:] + ticker[:6]
+    bulletins_list = get_company_bulletins(stock_code=ticker, start_date=curr_date)
+
+    return "\n\n".join([bulletin["info_title"] + "\n" + bulletin["info_date"] + "\n" + bulletin["info_content"] for bulletin in bulletins_list])
 
 
 def get_stock_news_zhipu(ticker, curr_date):

@@ -9,6 +9,7 @@ ANALYST_ORDER = [
     ("Market Analyst", AnalystType.MARKET),
     ("Social Media Analyst", AnalystType.SOCIAL),
     ("News Analyst", AnalystType.NEWS),
+    ("Bulletins Analyst", AnalystType.BULLETINS),
     ("Fundamentals Analyst", AnalystType.FUNDAMENTALS),
 ]
 

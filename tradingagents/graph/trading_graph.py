@@ -194,6 +194,13 @@ class TradingAgentsGraph:
                     # offline tools
                 ]
             ),
+            "bulletins": ToolNode(
+                [
+                    # online tools
+                    self.toolkit.get_stock_bulletins_sina
+                    # offline tools
+                ]
+            ),
             "fundamentals": ToolNode(
                 [
                     # online tools
@@ -246,6 +253,7 @@ class TradingAgentsGraph:
             "market_report": final_state["market_report"],
             "sentiment_report": final_state["sentiment_report"],
             "news_report": final_state["news_report"],
+            "bulletins_report": final_state["bulletins_report"],
             "fundamentals_report": final_state["fundamentals_report"],
             "investment_debate_state": {
                 "bull_history": final_state["investment_debate_state"]["bull_history"],
