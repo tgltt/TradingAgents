@@ -138,7 +138,7 @@ def get_company_bulletins_list_sina(stock_code, start_date, end_date, max_count=
     Returns:
         list[(str, str, str)]: 上市公司公告列表
     """
-    url = f"https://vip.stock.finance.sina.com.cn/corp/go.php/vCB_AllBulletin/stockid/{stock_code.lower()}.phtml"
+    url = f"https://vip.stock.finance.sina.com.cn/corp/go.php/vCB_AllBulletin/stockid/{stock_code}.phtml"
     return _get_company_news_or_bulletin_list_sina(url=url, 
                                                    stock_code=stock_code,
                                                    start_date=start_date,
@@ -146,11 +146,11 @@ def get_company_bulletins_list_sina(stock_code, start_date, end_date, max_count=
                                                    max_count=max_count)
 
 
-def get_company_new_or_bulletin_detail_sina(url):
-    """获取新闻或公告详情，目前暂不支持读取图片内的文本内容。
+def get_company_new_detail_sina(url):
+    """获取新闻详情，目前暂不支持读取图片内的文本内容。
 
     Args:
-        url (str): 新闻或公告详情链接
+        url (str): 新闻详情链接
 
     Returns:
         str: 新闻详情内容
@@ -176,7 +176,37 @@ def get_company_new_or_bulletin_detail_sina(url):
         return ""
     
     return new_content[0].get_text("\n").strip()
+
+
+def get_company_bulletin_detail_sina(url):
+    """获取公告详情，目前暂不支持读取图片内的文本内容。
+
+    Args:
+        url (str): 公告详情链接
+
+    Returns:
+        str: 公告详情内容
+    """
+    if url is None or len(url) <= 0:
+        return ""
     
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        print(f"Request '{url}' failed.")
+        return ""
+    
+    if response.apparent_encoding:
+        text = response.content.decode(response.apparent_encoding)
+    else:
+        text = response.text
+    
+    soup = BeautifulSoup(markup=text, features="html.parser")
+    new_content = soup.select(".tagmain")
+    if new_content is None or len(new_content) <= 0:
+        return ""
+    
+    return new_content[0].get_text("\n").strip()
 
 def _get_company_news_or_bulletins(stock_code, start_date, end_date=None, max_count=10, info_type=INFO_TYPE_NEWS):
     """
@@ -191,7 +221,7 @@ def _get_company_news_or_bulletins(stock_code, start_date, end_date=None, max_co
     Returns:
         list[(str, str, str)]: 上市公司新闻列表及内容
     """
-    print(f"get_company_news, stock_code={stock_code}, start_date={start_date}, end_date={end_date}, max_count={max_count}")
+    print(f"_get_company_news_or_bulletins, stock_code={stock_code}, start_date={start_date}, end_date={end_date}, max_count={max_count}")
 
     if info_type == INFO_TYPE_NEWS:
         info_list = get_company_news_list_sina(stock_code, start_date, end_date, max_count)
@@ -204,9 +234,13 @@ def _get_company_news_or_bulletins(stock_code, start_date, end_date=None, max_co
     
     info_contents = []
     for info_title, info_date, info_url in info_list:
-        info_content = get_company_new_or_bulletin_detail_sina(info_url)
+        if info_type == INFO_TYPE_NEWS:
+            info_content = get_company_new_detail_sina(info_url)
+        else:
+            info_content = get_company_bulletin_detail_sina(info_url)
+            
         if common_utils.is_empty(info_content):
-            print("info_content is none or empty, info_title={info_title}, info_url={info_url}")
+            print(f"info_content is none or empty, info_title={info_title}, info_url={info_url}")
             continue
 
         info_contents.append({"info_title": info_title, "info_date": info_date, "info_content": info_content})
@@ -255,4 +289,8 @@ def get_company_bulletins(stock_code, start_date, end_date=None, max_count=10):
 if __name__ == "__main__":
     # news_list = get_company_news(stock_code="SZ002403", start_date="20260301", end_date="20260407", max_count=1)
     # print(news_list)
+    
+    bulletin_list = get_company_bulletins(stock_code="002403", start_date="20260101", end_date="20260407", max_count=10)
+    print(bulletin_list)
+    
     pass
