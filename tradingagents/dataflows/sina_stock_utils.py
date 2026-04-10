@@ -4,6 +4,11 @@ from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 
+import os
+import sys
+
+sys.path.append(os.getcwd())
+
 from tradingagents.utils import common_utils
 
 INFO_TYPE_NEWS = 0
@@ -26,8 +31,8 @@ def _get_company_news_or_bulletin_list_sina(url, stock_code, start_date, end_dat
         start_date = datetime.now().strftime("%Y%m%d")
     
     if common_utils.is_empty(end_date):
-        # 如无指定结束日期，则默认为start_date的60天后
-        end_date = datetime.strptime(start_date, "%Y%m%d") + timedelta(days=60)
+        # 如无指定结束日期，则默认为start_date的7天后
+        end_date = datetime.strptime(start_date, "%Y%m%d") + timedelta(days=7)
         end_date = datetime.strftime(end_date, "%Y%m%d")
     
     start_date_value = datetime.strptime(start_date, "%Y%m%d")
@@ -290,7 +295,7 @@ if __name__ == "__main__":
     # news_list = get_company_news(stock_code="SZ002403", start_date="20260301", end_date="20260407", max_count=1)
     # print(news_list)
     
-    bulletin_list = get_company_bulletins(stock_code="002403", start_date="20260101", end_date="20260407", max_count=10)
+    bulletin_list = get_company_bulletins(stock_code="301368", start_date="20260101", end_date="20260407", max_count=10)
     print(bulletin_list)
     
     pass

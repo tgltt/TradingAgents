@@ -34,6 +34,8 @@ tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
 
 from tradingagents.utils import common_utils
 
+from datetime import datetime, timedelta
+
 def get_finnhub_news(
     ticker: Annotated[
         str,
@@ -662,14 +664,26 @@ def _get_tushare_tech_data (
 
 def get_stock_news_sina(ticker, curr_date):
     ticker = ticker[7:] + ticker[:6]
-    news_list = get_company_news(stock_code=ticker, start_date=curr_date)
+
+    start_date = datetime.strptime(curr_date, "%Y%m%d") - timedelta(days=14)
+    start_date = datetime.strftime(start_date, "%Y%m%d")
+
+    news_list = get_company_news(stock_code=ticker, 
+                                 start_date=start_date,
+                                 end_date=curr_date,
+                                 max_count=10)
 
     return "\n\n".join([news["info_title"] + "\n" + news["info_date"] + "\n" + news["info_content"] for news in news_list])
 
 
 def get_stock_bulletins_sina(ticker, curr_date):
-    ticker = ticker[7:] + ticker[:6]
-    bulletins_list = get_company_bulletins(stock_code=ticker, start_date=curr_date)
+    start_date = datetime.strptime(curr_date, "%Y%m%d") - timedelta(days=90)
+    start_date = datetime.strftime(start_date, "%Y%m%d")
+
+    bulletins_list = get_company_bulletins(stock_code=ticker[:6], 
+                                           start_date=start_date,
+                                           end_date=curr_date,
+                                           max_count=30)
 
     return "\n\n".join([bulletin["info_title"] + "\n" + bulletin["info_date"] + "\n" + bulletin["info_content"] for bulletin in bulletins_list])
 

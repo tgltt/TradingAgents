@@ -2,6 +2,10 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 import time
 import json
 
+import logging
+from tradingagents.log.log import TRADING_AGENTS_GRAPH
+tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
+
 
 def create_bulletins_analyst(llm, toolkit):
     def bulletins_analyst_node(state):
@@ -36,6 +40,8 @@ def create_bulletins_analyst(llm, toolkit):
         prompt = prompt.partial(current_date=current_date)
         prompt = prompt.partial(ticker=ticker)
         prompt = prompt.partial(company_name=company_name)
+
+        tag_logger.debug(f"bulletins_analyst: prompt: {prompt}")
 
         chain = prompt | llm.bind_tools(tools)
         result = chain.invoke(state["messages"])
