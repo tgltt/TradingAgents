@@ -199,7 +199,7 @@ def has_redirect(response):
     return common_utils.is_empty(response.content) and len(response.history) > 0 and len(response.url) > 0
 
 
-def baidu_search(keyword, max_count=10):
+def baidu_search(keyword, max_count):
     tag_logger.info("baidu_search")
 
     search_result_list = get_search_result_list(keyword=keyword, max_count=max_count)
@@ -326,24 +326,3 @@ def get_baidu_search_item_content(item_url):
     
     soup = BeautifulSoup(markup=text, features="html.parser")
     return soup.text.strip().replace("\n", "")
-
-
-# https://www.baidu.com/s?tn=baidu&wd=python%E9%85%8D%E7%BD%AE
-
-
-# http://www.baidu.com/link?url=pvEBHy9IsSMeKJnrCqR-VFEj4VBUo_KQaaS0pA8MJyv8k6LHlb5_ze0XpAFWnQSse7u0X1iQUpcyX3fJMX1fya
-
-
-# url = f"http://www.baidu.com/link?url=pvEBHy9IsSMeKJnrCqR-VFEj4VBUo_KQaaS0pA8MJyv8k6LHlb5_ze0XpAFWnQSse7u0X1iQUpcyX3fJMX1fya"
-# url = "https://vip.stock.finance.sina.com.cn/corp/go.php/vCB_AllNewsStock/symbol/sz301368.phtml"
-# url = 'https://blog.csdn.net/nvd11/article/details/156135443'
-
-
-import numpy as np
-
-keywords = ["Langgraph教程", "123", "今天天气", "汇编语方", "放假安排", "英语", "股票", "知乎文章"]
-keyword_index = np.random.choice(len(keywords))
-keywords[keyword_index]
-
-search_results = baidu_search(keyword=keywords, max_count=10)
-# print(search_results)
