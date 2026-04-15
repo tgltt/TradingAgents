@@ -335,4 +335,7 @@ def get_baidu_search_item_content(item_url):
         return ""
     
     soup = BeautifulSoup(markup=text, features="html.parser")
-    return soup.text.strip().replace("\n", "")
+    body = soup.find("body")
+    text = body.text if body is not None else soup.text
+
+    return text.strip().replace("\n", "")

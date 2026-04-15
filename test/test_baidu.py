@@ -212,7 +212,7 @@ def baidu_search(keyword, max_count=10):
         item_content = get_baidu_search_item_content(item_url=item_link)
         search_results.append(item_content)
 
-    return "---------------------------\n\n".join(search_results)
+    return "\n\n---------------------------\n\n".join(search_results)
     
 
 def get_search_result_list(keyword, max_count=10):
@@ -330,7 +330,10 @@ def get_baidu_search_item_content(item_url):
         return ""
     
     soup = BeautifulSoup(markup=text, features="html.parser")
-    return soup.text.strip().replace("\n", "")
+    body = soup.find("body")
+    text = body.text if body is not None else soup.text
+
+    return text.strip().replace("\n", "")
 
 
 # https://www.baidu.com/s?tn=baidu&wd=python%E9%85%8D%E7%BD%AE
