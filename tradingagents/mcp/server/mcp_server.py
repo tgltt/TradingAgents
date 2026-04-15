@@ -1,10 +1,17 @@
 import httpx
 from mcp.server import FastMCP
 
+import os
+import sys
+
+sys.path.append(os.getcwd())
+
 from tradingagents.dataflows import baidu_search_utils as bsu
+from tradingagents.utils import common_utils
 
 # # 初始化 FastMCP 服务器
-app = FastMCP('web-search')
+app = FastMCP('web-search', port=9000)
+
 
 @app.tool()
 async def web_search(query: str) -> str:
@@ -45,7 +52,7 @@ async def web_search(query: str) -> str:
 
 
 @app.tool()
-async def baidu_search(query: str, max_count: int=10) -> str:
+async def baidu_search(query: str, max_count: int=bsu.DEFAULT_MAX_COUNT) -> str:
     """
     使用百度搜索互联网内容
 
@@ -56,9 +63,11 @@ async def baidu_search(query: str, max_count: int=10) -> str:
     Returns:
         搜索结果文本
     """
+    if common_utils.is_empty(query):
+        return ""
 
     return bsu.baidu_search(query, max_count)
 
 
 if __name__ == "__main__":
-    app.run(transport='stdio')
+    app.run(transport="streamable-http")

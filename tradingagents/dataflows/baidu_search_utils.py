@@ -14,6 +14,7 @@ import logging
 from tradingagents.log.log import TRADING_AGENTS_GRAPH
 tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
 
+DEFAULT_MAX_COUNT = 10
 
 
 def _get_baidu_header():
@@ -199,8 +200,13 @@ def has_redirect(response):
     return common_utils.is_empty(response.content) and len(response.history) > 0 and len(response.url) > 0
 
 
-def baidu_search(keyword, max_count):
+def baidu_search(keyword, max_count=DEFAULT_MAX_COUNT):
     tag_logger.info("baidu_search")
+    if common_utils.is_empty(keyword):
+        return ""
+
+    if max_count <= 0:
+        max_count = DEFAULT_MAX_COUNT
 
     search_result_list = get_search_result_list(keyword=keyword, max_count=max_count)
     if common_utils.is_empty(search_result_list):
@@ -215,7 +221,7 @@ def baidu_search(keyword, max_count):
     return "\n\n".join(search_results)
     
 
-def get_search_result_list(keyword, max_count=10):
+def get_search_result_list(keyword, max_count=DEFAULT_MAX_COUNT):
     tag_logger.info("get_search_result_list")
 
     search_result_list = []
@@ -305,7 +311,11 @@ def get_baidu_search_item_content(item_url):
     tag_logger.debug(f"Requesting {item_url}")
     
     headers = _get_baidu_header()
-    response = requests.get(item_url, headers=headers)
+    try:
+        response = requests.get(item_url, headers=headers)
+    except Exception as ex:
+        tag_logger.error(f"Get {item_url} failed, ex={ex}")
+        return ""
 
     if response.status_code != 200:
         tag_logger.warning(f"Request '{item_url}' failed, http code: {response.status_code}, url: {response.url}.")

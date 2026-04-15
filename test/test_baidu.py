@@ -212,7 +212,7 @@ def baidu_search(keyword, max_count=10):
         item_content = get_baidu_search_item_content(item_url=item_link)
         search_results.append(item_content)
 
-    return "\n\n".join(search_results)
+    return "---------------------------\n\n".join(search_results)
     
 
 def get_search_result_list(keyword, max_count=10):
@@ -305,7 +305,12 @@ def get_baidu_search_item_content(item_url):
     tag_logger.debug(f"Requesting {item_url}")
     
     headers = _get_baidu_header()
-    response = requests.get(item_url, headers=headers)
+
+    try:
+        response = requests.get(item_url, headers=headers)
+    except Exception as ex:
+        tag_logger.error(f"Get {item_url} failed, ex={ex}")
+        return ""
 
     if response.status_code != 200:
         tag_logger.warning(f"Request '{item_url}' failed, http code: {response.status_code}, url: {response.url}.")
@@ -345,5 +350,5 @@ keywords = ["Langgraph教程", "123", "今天天气", "汇编语方", "放假安
 keyword_index = np.random.choice(len(keywords))
 keywords[keyword_index]
 
-search_results = baidu_search(keyword=keywords, max_count=10)
-# print(search_results)
+search_results = baidu_search(keyword="301368.SZ 丰立智能最新新闻", max_count=10)
+print(search_results)

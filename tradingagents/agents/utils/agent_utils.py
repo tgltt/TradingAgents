@@ -14,6 +14,14 @@ import tradingagents.dataflows.interface as interface
 from tradingagents.default_config import DEFAULT_CONFIG
 from langchain_core.messages import HumanMessage
 
+import asyncio
+from tradingagents.mcp.client.mcp_client import baidu_search 
+from tradingagents.utils import common_utils
+
+import logging
+from tradingagents.log.log import TRADING_AGENTS_GRAPH
+tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
+
 
 def create_msg_delete():
     def delete_messages(state):
@@ -175,6 +183,28 @@ class Toolkit:
         google_news_results = interface.get_google_news(query, curr_date, 7)
 
         return google_news_results
+    
+
+    @staticmethod
+    @tool
+    def get_baidu_news(
+        query: Annotated[str, "搜索使用的查询关键字"],
+        max_count: Annotated[int, "最多返回几个新闻"]=3,
+    ):
+        """
+        从百度搜索，基于查询关键词和最大返回个数，检索最新的新闻，
+        Args:
+            query (str): 搜索使用的查询关键字
+            max_count (int): 最多返回几个新闻
+        Returns:
+            str: 从百度搜索返回的，与查询关键词相关的搜索结果。
+        """
+        tag_logger.info("get_baidu_news")
+        if common_utils.is_empty(query):
+            tag_logger.warning("query is none or empty")
+            return ""
+    
+        return asyncio.run(baidu_search(query, max_count))
     
 
     @staticmethod
