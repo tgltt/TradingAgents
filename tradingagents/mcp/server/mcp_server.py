@@ -9,6 +9,10 @@ sys.path.append(os.getcwd())
 from tradingagents.dataflows import baidu_search_utils as bsu
 from tradingagents.utils import common_utils
 
+import logging
+from tradingagents.log.log import TRADING_AGENTS_GRAPH
+tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
+
 # # 初始化 FastMCP 服务器
 app = FastMCP('web-search', port=9000)
 
@@ -63,10 +67,16 @@ async def baidu_search(query: str, max_count: int=bsu.DEFAULT_MAX_COUNT) -> str:
     Returns:
         搜索结果文本
     """
+    tag_logger.info("mcp_server: baidu_search")
     if common_utils.is_empty(query):
+        tag_logger.info("query is none or empty")
         return ""
 
-    return bsu.baidu_search(query, max_count)
+    search_result = bsu.baidu_search(query, max_count)
+
+    tag_logger.info(f"query: {query}, max_count: {max_count}, search_result: {search_result}")
+
+    return search_result
 
 
 if __name__ == "__main__":

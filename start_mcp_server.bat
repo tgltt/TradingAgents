@@ -1,0 +1,1 @@
+python tradingagents\mcp\server\mcp_server.py

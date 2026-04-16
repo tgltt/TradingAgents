@@ -182,15 +182,16 @@ class TradingAgentsGraph:
                     # online tools
                     self.toolkit.get_stock_news_zhipu,
                     # offline tools
-                    self.toolkit.get_reddit_stock_info,
+                    # self.toolkit.get_reddit_stock_info,
                 ]
             ),
             "news": ToolNode(
                 [
                     # online tools
-                    self.toolkit.get_stock_news_sina
+                    self.toolkit.get_stock_news_sina,
                     # self.toolkit.get_global_news_zhipu,
                     # self.toolkit.get_google_news,
+                    self.toolkit.get_baidu_news
                     # offline tools
                 ]
             ),

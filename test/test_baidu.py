@@ -223,7 +223,7 @@ def get_search_result_list(keyword, max_count=10):
         tag_logger.warning("keyword is none or empty")
         return search_result_list
     
-    url = f"https://www.baidu.com/s?tn=baidu&wd={keyword}"
+    url = f"https://www.baidu.com/s?ie=utf-8&bsst=1&rsv_dl=news_t_sk&tn=news&cl=2&medium=0&rtt=1&wd={keyword}"
     headers = _get_baidu_header()
     response = requests.get(url, headers=headers)
 
@@ -240,13 +240,13 @@ def get_search_result_list(keyword, max_count=10):
         print(f"Found no search result panel.")
         return search_result_list
     
-    items = data[0].select(".result.c-container.xpath-log.new-pmd")
+    items = data[0].select(".result-op.c-container.xpath-log.new-pmd")
     if common_utils.is_empty(items):
         print(f"Found no search result.")
         return search_result_list
     
     for i in range(len(items)):
-        item = items[i].select(".title-box_4YBsj")
+        item = items[i].select(".news-title_1YtI1")
         if common_utils.is_empty(item):
             continue
 
@@ -353,5 +353,5 @@ keywords = ["Langgraph教程", "123", "今天天气", "汇编语方", "放假安
 keyword_index = np.random.choice(len(keywords))
 keywords[keyword_index]
 
-search_results = baidu_search(keyword="301368.SZ 丰立智能最新新闻", max_count=10)
+search_results = baidu_search(keyword="301368.SZ 丰立智能", max_count=10)
 print(search_results)

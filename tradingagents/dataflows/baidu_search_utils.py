@@ -208,15 +208,23 @@ def baidu_search(keyword, max_count=DEFAULT_MAX_COUNT):
     if max_count <= 0:
         max_count = DEFAULT_MAX_COUNT
 
-    search_result_list = get_search_result_list(keyword=keyword, max_count=max_count)
+    search_result_list = []
+    try:
+        search_result_list = get_search_result_list(keyword=keyword, max_count=max_count)
+    except Exception as ex:
+        tag_logger.error(f"Get query: {keyword} result failed, reason: {ex}")
+
     if common_utils.is_empty(search_result_list):
         tag_logger.warning("search_result_list is none or empty")
         return ""
     
     search_results = []
     for item_title, item_link in search_result_list:
-        item_content = get_baidu_search_item_content(item_url=item_link)
-        search_results.append(item_content)
+        try:
+            item_content = get_baidu_search_item_content(item_url=item_link)
+            search_results.append(item_title + "\n" + item_content)
+        except Exception as ex:
+            tag_logger.error(f"Get {item_title}  {item_link} failed, reason: {ex}")
 
     return "\n\n".join(search_results)
     
@@ -229,7 +237,7 @@ def get_search_result_list(keyword, max_count=DEFAULT_MAX_COUNT):
         tag_logger.warning("keyword is none or empty")
         return search_result_list
     
-    url = f"https://www.baidu.com/s?tn=baidu&wd={keyword}"
+    url = f"https://www.baidu.com/s?ie=utf-8&bsst=1&rsv_dl=news_t_sk&tn=news&cl=2&medium=0&rtt=1&wd={keyword}"
     headers = _get_baidu_header()
     response = requests.get(url, headers=headers)
 
@@ -246,13 +254,13 @@ def get_search_result_list(keyword, max_count=DEFAULT_MAX_COUNT):
         print(f"Found no search result panel.")
         return search_result_list
     
-    items = data[0].select(".result.c-container.xpath-log.new-pmd")
+    items = data[0].select(".result-op.c-container.xpath-log.new-pmd")
     if common_utils.is_empty(items):
         print(f"Found no search result.")
         return search_result_list
     
     for i in range(len(items)):
-        item = items[i].select(".title-box_4YBsj")
+        item = items[i].select(".news-title_1YtI1")
         if common_utils.is_empty(item):
             continue
 
@@ -338,4 +346,8 @@ def get_baidu_search_item_content(item_url):
     body = soup.find("body")
     text = body.text if body is not None else soup.text
 
-    return text.strip().replace("\n", "")
+    return text.strip().replace("\n", "").replace("\t", "")
+
+
+# search_results = baidu_search(keyword="301368.SZ 丰立智能", max_count=3)
+# print(search_results)
