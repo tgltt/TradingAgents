@@ -169,12 +169,7 @@ class TradingAgentsGraph:
         return {
             "market": ToolNode(
                 [
-                    # online tools
-                    self.toolkit.get_tushare_tech_data_online,
-                    self.toolkit.get_stockstats_indicators_report_online,
-                    # offline tools
-                    self.toolkit.get_tushare_tech_data_offline,
-                    self.toolkit.get_stockstats_indicators_report_offline,
+                    self.toolkit.get_stock_tech_data
                 ]
             ),
             "social": ToolNode(

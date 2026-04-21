@@ -11,12 +11,7 @@ from .interface import (
     get_reddit_global_news,
     get_reddit_company_news,
     # Financial statements functions
-    
-    # Technical analysis functions
-    get_stock_stats_indicators_window,
-    # Market data functions
-    get_tushare_tech_data_online,
-    get_tushare_tech_data_offline,
+    get_stock_tech_data
 )
 
 __all__ = [
@@ -25,10 +20,5 @@ __all__ = [
     "get_reddit_global_news",
     "get_reddit_company_news",
     # Financial statements functions
-    
-    # Technical analysis functions
-    "get_stock_stats_indicators_window",
-    # Market data functions
-    "get_tushare_tech_data_online",
-    "get_tushare_tech_data_offline",
+    "get_stock_tech_data"
 ]

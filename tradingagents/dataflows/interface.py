@@ -1,7 +1,6 @@
 from typing import Annotated, Dict
 from collections import defaultdict
 
-from .reddit_utils import fetch_top_from_category
 from .yfin_utils import *
 from .stockstats_utils import *
 from .googlenews_utils import *
@@ -446,144 +445,98 @@ def get_reddit_company_news(
     return f"##{ticker} News Reddit, from {before} to {curr_date}:\n\n{news_str}"
 
 
-def get_stock_stats_indicators_window(
-    symbol: Annotated[str, "ticker symbol of the company"],
-    indicator: Annotated[str, "technical indicator to get the analysis and report of"],
-    curr_date: Annotated[
-        str, "The current trading date you are trading on, YYYYmmdd"
-    ],
-    look_back_days: Annotated[int, "how many days to look back"],
-    online: Annotated[bool, "to fetch data online or offline"]) -> str:
+def get_stock_tech_data(
+        symbol: Annotated[str, "公司代码"],
+        start_date: Annotated[str, "Start date in yyyymmdd format"],
+        end_date: Annotated[str, "End date in yyyymmdd format"],
+    ) -> str:
+        """
+        检索指定上市公司的股价、成交量、技术指标等数据。
+        参数:
+            symbol (str): 公司代码, e.g. 600036.SH, 300119.SZ
+            start_date (str): 开始日期，格式为yyyymmdd
+            end_date (str): 结束日期，格式为yyyymmdd
+        返回值:
+            str: 一个格式化的dataframe，其中包含指定股票代码在指定日期范围内的股价、成交量、技术指标等数据。
+        """
+        tag_logger.info("get_stock_tech_data")
 
-    best_ind_params = {
-        # Moving Averages
-        "close_50_sma": (
-            "50 SMA: A medium-term trend indicator. "
-            "Usage: Identify trend direction and serve as dynamic support/resistance. "
-            "Tips: It lags price; combine with faster indicators for timely signals."
-        ),
-        "close_200_sma": (
-            "200 SMA: A long-term trend benchmark. "
-            "Usage: Confirm overall market trend and identify golden/death cross setups. "
-            "Tips: It reacts slowly; best for strategic trend confirmation rather than frequent trading entries."
-        ),
-        "close_10_ema": (
-            "10 EMA: A responsive short-term average. "
-            "Usage: Capture quick shifts in momentum and potential entry points. "
-            "Tips: Prone to noise in choppy markets; use alongside longer averages for filtering false signals."
-        ),
-        # MACD Related
-        "macd": (
-            "MACD: Computes momentum via differences of EMAs. "
-            "Usage: Look for crossovers and divergence as signals of trend changes. "
-            "Tips: Confirm with other indicators in low-volatility or sideways markets."
-        ),
-        "macds": (
-            "MACD Signal: An EMA smoothing of the MACD line. "
-            "Usage: Use crossovers with the MACD line to trigger trades. "
-            "Tips: Should be part of a broader strategy to avoid false positives."
-        ),
-        "macdh": (
-            "MACD Histogram: Shows the gap between the MACD line and its signal. "
-            "Usage: Visualize momentum strength and spot divergence early. "
-            "Tips: Can be volatile; complement with additional filters in fast-moving markets."
-        ),
-        # Momentum Indicators
-        "rsi": (
-            "RSI: Measures momentum to flag overbought/oversold conditions. "
-            "Usage: Apply 70/30 thresholds and watch for divergence to signal reversals. "
-            "Tips: In strong trends, RSI may remain extreme; always cross-check with trend analysis."
-        ),
-        # Volatility Indicators
-        "boll": (
-            "Bollinger Middle: A 20 SMA serving as the basis for Bollinger Bands. "
-            "Usage: Acts as a dynamic benchmark for price movement. "
-            "Tips: Combine with the upper and lower bands to effectively spot breakouts or reversals."
-        ),
-        "boll_ub": (
-            "Bollinger Upper Band: Typically 2 standard deviations above the middle line. "
-            "Usage: Signals potential overbought conditions and breakout zones. "
-            "Tips: Confirm signals with other tools; prices may ride the band in strong trends."
-        ),
-        "boll_lb": (
-            "Bollinger Lower Band: Typically 2 standard deviations below the middle line. "
-            "Usage: Indicates potential oversold conditions. "
-            "Tips: Use additional analysis to avoid false reversal signals."
-        ),
-        "atr": (
-            "ATR: Averages true range to measure volatility. "
-            "Usage: Set stop-loss levels and adjust position sizes based on current market volatility. "
-            "Tips: It's a reactive measure, so use it as part of a broader risk management strategy."
-        ),
-        # Volume-Based Indicators
-        "vwma": (
-            "VWMA: A moving average weighted by volume. "
-            "Usage: Confirm trends by integrating price action with volume data. "
-            "Tips: Watch for skewed results from volume spikes; use in combination with other volume analyses."
-        ),
-        "mfi": (
-            "MFI: The Money Flow Index is a momentum indicator that uses both price and volume to measure buying and selling pressure. "
-            "Usage: Identify overbought (>80) or oversold (<20) conditions and confirm the strength of trends or reversals. "
-            "Tips: Use alongside RSI or MACD to confirm signals; divergence between price and MFI can indicate potential reversals."
-        ),
-    }
+        # read in data
+        cache_file = os.path.join(DATA_DIR, "tech_data", f"{symbol}-{start_date}-{end_date}.csv")
 
-    if indicator not in best_ind_params:
-        raise ValueError(
-            f"Indicator {indicator} is not supported. Please choose from: {list(best_ind_params.keys())}"
-        )
+        tech_data = None
+        if os.path.exists(cache_file):
+            tech_data = pd.read_csv(cache_file)
 
-    end_date = curr_date
-    curr_date = datetime.strptime(curr_date, "%Y%m%d")
-    before = curr_date - relativedelta(days=look_back_days)
-    before = datetime.strftime(before, "%Y%m%d")
+        # Check if data is empty
+        if common_utils.is_empty(tech_data):
+            tag_logger.info(f"Load tech data for symbol {symbol} from {cache_file}")
 
-    if not online:
-        data = pd.read_csv(os.path.join(DATA_DIR, "market_data", "price_data", f"{symbol}-stock-stats-indicator-{before}-{end_date}.csv"))
-    else:
-        data = _download_tushare_stock_price_data(symbol=symbol,
-                                                  start_date=before,
-                                                  end_date=end_date,
-                                                  look_back_days=look_back_days + 365)
-    
-        if data is not None and len(data) > 0:
-            data = data[["trade_date", "open", "high", "low", "close", "vol"]]
-            data = data.rename(columns={"trade_date": "date", "vol": "volume"})
+            tech_data = _get_tushare_tech_data(symbol, start_date, end_date)
+            # Check if data is empty
+            if len(tech_data) <= 0:
+                tag_logger.error(f"No data found for symbol '{symbol}' between {start_date} and {end_date}")
+
+            tech_data = _get_stock_stats_indicators_window(tech_data)
+            # Save tech data
+            os.makedirs(cache_file[:cache_file.rindex(os.sep)], exist_ok=True)
+            tech_data.to_csv(cache_file, index=False)
+
+            tag_logger.info(f"Saved {cache_file}")
+        
+        tech_data_summary = _get_tushare_tech_data_summary(data=tech_data, symbol=symbol, start_date=start_date, end_date=end_date)
+        
+        return tech_data_summary
+
+
+def _get_stock_stats_indicators_window (
+    data: Annotated[DataFrame, "公司股价数据"]):
+    tag_logger.info("_get_stock_stats_indicators_window")
+
+    if common_utils.is_empty(data):
+        tag_logger.info(f"Stock price data is none or empty")
+        return data
+        
+    # data = data[["trade_date", "open", "high", "low", "close", "vol"]]
+    data = data.rename(columns={"trade_date": "date", "vol": "volume"})
+
+    date_column = data["date"]
+    date_list = date_column.values.tolist()
+    date_column.index = date_list
+
+    data.index = date_list
+
+    stats_data = wrap(data)
+    # 计算指标
+    # 均线
+    data["close_5_sma"] = stats_data["close_5_sma"]
+    data["close_10_sma"] = stats_data["close_10_sma"]
+    data["close_20_sma"] = stats_data["close_20_sma"]
+    data["close_60_sma"] = stats_data["close_60_sma"]
+    data["close_240_sma"] = stats_data["close_240_sma"]
+
+    # KD指标
+    data["kdjk_18"] = stats_data["kdjk_18"]
+    data["kdjd_18"] = stats_data["kdjd_18"]
+
+    # MACD指标
+    data["macd"] = stats_data["macd"]
+    data["macds"] = stats_data["macds"]
+    data["macdh"] = stats_data["macdh"]
+
+    # BIAS指标
+    data["bias_20"] = (stats_data["close"] - stats_data["close_20_sma"]) / stats_data["close_20_sma"] * 100
+
+    # data.insert(0, "date", date_column.astype(str))
+
+    return data
             
-            data = wrap(data)
-            # 计算指标
-            data = data[indicator]
-            
-            data = data[data.index >= before].to_frame()
-            
-            save_output = os.path.join(DATA_DIR, "market_data", "price_data", f"{symbol}-stock-stats-indicator-{before}-{end_date}.csv")
-            data.to_csv(save_output)
-            
-            print(f"Saved {save_output}")
-            
-    if data is None or len(data) <= 0:
-        indicator_value = f"No data found for symbol '{symbol}' between {before} and {end_date}"      
-    else:
-        indicator_value = ""
-        for index, value in data.iterrows():
-            indicator_value += f"{index}: {value[indicator]:.2}\n"  
-                
-    result_str = (
-        f"## {indicator} values from {before} to {end_date}:\n\n"
-        + f"{indicator_value}"
-        + "\n\n"
-        + best_ind_params.get(indicator, "No description available.")
-    )
-
-    return result_str
-
 
 def _download_tushare_stock_price_data(
     symbol: Annotated[str, "Ticker symbol of the company"],
     start_date: Annotated[str, "Start date in yyyymmdd format"],
     end_date: Annotated[str, "End date in yyyymmdd format"],
-    look_back_days: Annotated[int, "Look back days"] = 0,
-    save_to_file: Annotated[bool, "Save data in cache file"] = False) -> DataFrame:
+    look_back_days: Annotated[int, "Look back days"] = 0) -> DataFrame:
     
     q_start_date = start_date
     if look_back_days > 0:
@@ -592,75 +545,126 @@ def _download_tushare_stock_price_data(
         q_start_date = datetime.strftime(q_start_date, "%Y%m%d")
     
     data = api.daily(ts_code=symbol, start_date=q_start_date, end_date=end_date)
-    # Check if data is empty
-    if len(data) <= 0:
-        tag_logger.error(f"No data found for symbol '{symbol}' between {start_date} and {end_date}")
-        return None
-    
-    if save_to_file:
-        dest_dir = os.path.join(DATA_DIR, "market_data", "price_data")
-        os.makedirs(dest_dir, exist_ok=True)
-        output_csv = os.path.join(dest_dir, f"{symbol}-tushare-data-{start_date}-{end_date}.csv")
-        data.to_csv(output_csv, index=False)
-        
-        print(f"Saved {output_csv}")
     
     return data
 
 
-def get_tushare_tech_data_offline(
-    symbol: Annotated[str, "Ticker symbol of the company"],
-    start_date: Annotated[str, "Start date in yyyymmdd format"],
-    end_date: Annotated[str, "End date in yyyymmdd format"]) -> str:
-    # read in data
-    cache_file = os.path.join(DATA_DIR, "market_data", "price_data", f"{symbol}-tushare-data-{start_date}-{end_date}.csv")
-    data = pd.read_csv(cache_file)
-    
-    # Check if data is empty
-    if len(data) <= 0:
-        return (
-            f"No data found for symbol '{symbol}' between {start_date} and {end_date}"
-        )
-        
-    print(f"Loaded {cache_file}")
-
-    return _get_tushare_tech_data(data=data, symbol=symbol, start_date=start_date, end_date=end_date)
-
-
-def get_tushare_tech_data_online(
+def _get_tushare_tech_data(
     symbol: Annotated[str, "Ticker symbol of the company"],
     start_date: Annotated[str, "Start date in yyyymmdd format"],
     end_date: Annotated[str, "End date in yyyymmdd format"]
 ):
     # Fetch historical data for the specified date range
-    data = _download_tushare_stock_price_data(symbol=symbol, start_date=start_date, end_date=end_date, save_to_file=True)
-    return _get_tushare_tech_data(data=data, symbol=symbol, start_date=start_date, end_date=end_date)
+    data = _download_tushare_stock_price_data(symbol=symbol, start_date=start_date, end_date=end_date)
+    return data
 
 
-def _get_tushare_tech_data (
+def _get_tech_index_desc():
+    tech_index_params = {
+        # Moving Averages
+        "close_5_sma": (
+            "5 SMA: 一条反应灵敏的短期均线。"
+            "用途：捕捉动能的快速变化及潜在的入场点。"
+            "提示：在震荡市场中容易产生噪音；建议结合较长周期的均线使用，以过滤虚假信号。"
+        ),
+        "close_10_sma": (
+            "10 SMA: 一条反应灵敏的中短期均线。"
+            "用途：捕捉动能的快速变化及潜在的入场点。"
+            "提示：在震荡市场中容易产生噪音；建议结合较长周期的均线使用，以过滤虚假信号。"
+        ),
+        "close_20_sma": (
+            "20 SMA: 一条反应灵敏的中短期均线。"
+            "用途：捕捉动能的快速变化及潜在的入场点。"
+            "提示：在震荡市场中容易产生噪音；建议结合较长周期的均线使用，以过滤虚假信号。"
+        ),
+        "close_60_sma": (
+            "60 SMA: 中期趋势指标。"
+            "用途：识别趋势方向，并充当动态支撑/阻力位。"
+            "提示：该指标滞后于价格，建议结合更灵敏的指标使用，以获取及时信号。"
+        ),
+        "close_240_sma": (
+            "240 SMA: 长期趋势基准。 "
+            "用途：确认整体市场趋势，并识别金叉/死叉形态。 "
+            "提示：该指标反应较慢，最适合用于战略性趋势确认，而非频繁的交易入场。"
+        ),
+        # MACD Related
+        "macd": (
+            "MACD: 通过计算指数移动平均线（EMA）之间的差值来衡量动能。 "
+            "用途：观察均线交叉与价格背离，作为趋势变化的信号。 "
+            "提示：在低波动或横盘市场中，需结合其他指标进行确认。"
+        ),
+        "macds": (
+            "MACD信号线：对MACD线进行平滑处理得到的指数移动平均线。 "
+            "用途：利用其与MACD线的交叉来触发交易信号。 "
+            "提示：应作为更广泛交易策略的一部分，以避免虚假信号。"
+        ),
+        "macdh": (
+            "MACD柱状图：显示MACD线与其信号线之间的差值（缺口）。 "
+            "用途：直观展示动能强度，并及早发现背离现象。 "
+            "提示：该指标可能波动较大；在快速变化的市场中，建议配合其他过滤器使用。"
+        ),
+        # KDJ Related
+        "kdjk": (
+            "KDJ K: 快速确认线，反应短期价格走势。"
+            "用途: 当K线向上突破D线时，表示为上升趋势，可以买进；当K线向下突破D线时，可以卖出。"
+            "提示: K值在0～100的区间内波动， 50为多空均衡线。如果处在多方市场，50是回档的支撑线，如果处在空方市场，50是反弹的压力线。当K值升到90以上时表示偏高，跌到20以下时表示偏低。太高就有下跌的可能，而太低就有上涨的机会。"
+        ),
+        "kdjd": (
+            "KDJ D: D为慢速指标。 "
+            "用途: D黄色线由下转上为买入信号，由上转下为卖出信号。 "
+            "提示: D值在0～100的区间内波动， 50为多空均衡线。如果处在多方市场，50是回档的支撑线，如果处在空方市场，50是反弹的压力线。"
+        ),
+        # BIAS Related
+        "bias": (
+            "BIAS : 通过计算市场指数或收盘价与某条移动平均线之间的差距百分比，以反映一定时期内价格与其MA偏离程度的指标，从而得出价格在剧烈波动时因偏离移动平均趋势而造成回档或反弹的可能性，以及价格在正常波动范围内移动而形成继续原有势的可信度。"
+            "用途: 应该结合不同情况灵活运用才能提高盈利机会。第一，对于风险不同的股票应区别对待。有业绩保证且估值水平合理的个股，在下跌情况下乖离率通常较低时就开始反弹。这是由于持有人心态稳定不愿低价抛售，同时空仓投资者担心错过时机而及时买入的结果。反之，对绩差股而言，其乖离率通常在跌至绝对值较大时，才开始反弹。第二，要考虑流通市值的影响。流通市值较大的股票，不容易被操纵，走势符合一般的市场规律，适宜用乖离率进行分析。而流通市值较小的个股或庄股由于容易被控盘，因此在使用该指标时应谨慎。第三，在股价的低位密集成交区，由于筹码分散，运用乖离率指导操作时成功率较高，而在股价经过大幅攀升后，在机构的操纵下容易暴涨暴跌，此时成功率则相对较低。"
+            "提示: 当乖离率接近历史最大值时，预示着多方发威已接近极限，行情随时都可能向下，投资者应减仓，而不能盲目追高。当乖离率接近历史最小值时，预示着空方发威接近极限，行情随时都可能掉头向上，投资者不应再割肉出局而应逢低吸纳。"
+        ),
+    }
+
+    return tech_index_params
+
+
+def _get_tushare_tech_data_summary (
     data: Annotated[DataFrame, "Stock ticker data"],
     symbol: Annotated[str, "Ticker symbol of the company"],
     start_date: Annotated[str, "Start date in yyyymmdd format"],
-    end_date: Annotated[str, "End date in yyyymmdd format"],
+    end_date: Annotated[str, "End date in yyyymmdd format"]
 ):
-    csv_string = ""
-    if not common_utils.is_empty(data):
-        selected_columns = ["trade_date", "open", "high", "low", "close", "vol", "amount"]
-        data = data[selected_columns]
-        data = data.rename(columns={"trade_date": "date", "vol": "volumn"})
-        
-        data = data[data["date"].astype(str) >= start_date]
-        
-        # Convert DataFrame to CSV string
-        csv_string = data.to_csv(index=False)
-
     # Add header information
     header = f"# Stock data for {symbol.upper()} from {start_date} to {end_date}\n"
-    header += f"# Total records: {len(data)}\n"
+    header += f"# Total records: {0 if data is None else len(data)}\n"
     header += f"# Data retrieved on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
 
-    return header + csv_string
+    if common_utils.is_empty(data):
+        return header + "None Data"
 
+    selected_columns = ["date", "open", "high", "low", "close", "volume", "amount", 
+                        "close_5_sma", "close_10_sma", "close_20_sma", "close_60_sma", "close_240_sma", 
+                        "macd", "macds", "macdh", "kdjk_18", "kdjd_18", "bias_20"]
+    data = data[selected_columns]
+        
+    # Convert DataFrame to CSV string, including trade_date、open、high、low、close、vol and amount
+    price_data_string = data.iloc[:, :7].to_csv(index=False)
+
+    tech_index_string = ""
+    tech_index_params = _get_tech_index_desc()
+    for i in range(7, len(selected_columns)):
+        sub_data = data.iloc[:, [0, i]]
+        indicator_value = ""
+        for _, value in sub_data.iterrows():
+            indicator_value += f"{value[0]}: {value[1]:.2}\n"  
+                
+        tech_index_string += (
+            "\n\n"
+            + f"## {selected_columns[i]} values from {start_date} to {end_date}:\n\n"
+            + f"{indicator_value}"
+            + "\n\n"
+            + tech_index_params.get(selected_columns[i], "No description available.")
+        )
+
+    return header + price_data_string + tech_index_string
+    
 
 def get_stock_news_sina(ticker, curr_date):
     ticker = ticker[7:] + ticker[:6]
