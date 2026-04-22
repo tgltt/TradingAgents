@@ -16,11 +16,9 @@ from langchain_core.messages import HumanMessage
 
 import asyncio
 from tradingagents.mcp.client.mcp_client import baidu_search 
-from tradingagents.utils import common_utils
 
 import logging
-from tradingagents.log.log import TRADING_AGENTS_GRAPH
-tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
+from tradingagents.utils import common_utils
 
 
 def create_msg_delete():
@@ -64,21 +62,23 @@ class Toolkit:
     @tool
     def get_stock_tech_data(
         symbol: Annotated[str, "公司代码"],
-        start_date: Annotated[str, "Start date in yyyymmdd format"],
-        # end_date: Annotated[str, "End date in yyyymmdd format"],
+        # start_date: Annotated[str, "开始日期，格式为yyyymmdd"], start_date (str): 开始日期，格式为yyyymmdd
+        end_date: Annotated[str, "结束日期，格式为yyyymmdd"]
     ) -> str:
         """
         获取公司的股价、成交量、技术指标等数据。
         参数:
             symbol (str): 公司代码, e.g. 600036.SH, 300119.SZ
-            start_date (str): 开始日期，格式为yyyymmdd
+            end_date (str): 结束日期，格式为yyyymmdd
         返回值:
             str: 一个格式化的dataframe，其中包含指定股票代码在指定日期范围内的股价、成交量、技术指标等数据。
         """
 
-        end_date = datetime.strptime(start_date, "%Y%m%d") - timedelta(days=240)
-        end_date = datetime.strftime(end_date, "%Y%m%d")
+        start_date = datetime.strptime(end_date, "%Y%m%d") - timedelta(days=365)
+        start_date = datetime.strftime(start_date, "%Y%m%d")
         result_data = interface.get_stock_tech_data(symbol, start_date, end_date)
+
+        common_utils.pretty_log(f"result_data={result_data}", logging.INFO)
 
         return result_data
     
@@ -118,9 +118,9 @@ class Toolkit:
         Returns:
             str: 从百度搜索返回的，与查询关键词相关的搜索结果。
         """
-        tag_logger.info("get_baidu_news")
+        common_utils.log("get_baidu_news", logging.INFO)
         if common_utils.is_empty(query):
-            tag_logger.warning("query is none or empty")
+            common_utils.log("query is none or empty", logging.WARNING)
             return ""
     
         return asyncio.run(baidu_search(query, max_count))

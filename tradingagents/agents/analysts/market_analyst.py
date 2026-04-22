@@ -2,9 +2,6 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 import time
 import json
 
-import logging
-from tradingagents.log.log import TRADING_AGENTS_GRAPH
-tag_logger = logging.getLogger(TRADING_AGENTS_GRAPH)
 
 def create_market_analyst(llm, toolkit):
 
@@ -94,8 +91,6 @@ def create_market_analyst(llm, toolkit):
         prompt = prompt.partial(current_date=current_date)
         prompt = prompt.partial(ticker=ticker)
         prompt = prompt.partial(company_name=company_name)
-
-        tag_logger.debug(f"bind_tools={tools}")
         
         chain = prompt | llm.bind_tools(tools)
 
@@ -103,8 +98,6 @@ def create_market_analyst(llm, toolkit):
 
         report = ""
 
-        tag_logger.debug(f"result.tool_calls={result.tool_calls}")
-        
         if len(result.tool_calls) == 0:
             report = result.content
        

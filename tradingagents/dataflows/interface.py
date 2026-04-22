@@ -35,278 +35,6 @@ from tradingagents.utils import common_utils
 
 from datetime import datetime, timedelta
 
-def get_finnhub_news(
-    ticker: Annotated[
-        str,
-        "Search query of a company's, e.g. 'AAPL, TSM, etc.",
-    ],
-    curr_date: Annotated[str, "Current date in yyyy-mm-dd format"],
-    look_back_days: Annotated[int, "how many days to look back"],
-):
-    """
-    Retrieve news about a company within a time frame
-
-    Args
-        ticker (str): ticker for the company you are interested in
-        start_date (str): Start date in yyyy-mm-dd format
-        end_date (str): End date in yyyy-mm-dd format
-    Returns
-        str: dataframe containing the news of the company in the time frame
-
-    """
-
-    start_date = datetime.strptime(curr_date, "%Y-%m-%d")
-    before = start_date - relativedelta(days=look_back_days)
-    before = before.strftime("%Y-%m-%d")
-
-    result = get_data_in_range(ticker, before, curr_date, "news_data", DATA_DIR)
-
-    if len(result) == 0:
-        error_msg = f"⚠️ Unable to retrieve news data for {ticker} ({before} to {curr_date})\n"
-        error_msg += f"Possible reasons:\n"
-        error_msg += f"1. Data files do not exist or path configuration is incorrect\n"
-        error_msg += f"2. No news data available for the specified date range\n"
-        error_msg += f"3. Need to download or update Finnhub news data first\n"
-        error_msg += f"Suggestion: Check data directory configuration or re-fetch news data"
-        print(f"📰 [DEBUG] {error_msg}")
-        return error_msg
-
-    combined_result = ""
-    for day, data in result.items():
-        if len(data) == 0:
-            continue
-        for entry in data:
-            current_news = (
-                "### " + entry["headline"] + f" ({day})" + "\n" + entry["summary"]
-            )
-            combined_result += current_news + "\n\n"
-
-    return f"## {ticker} News, from {before} to {curr_date}:\n" + str(combined_result)
-
-
-def get_finnhub_company_insider_sentiment(
-    ticker: Annotated[str, "ticker symbol for the company"],
-    curr_date: Annotated[
-        str,
-        "current date of you are trading at, yyyy-mm-dd",
-    ],
-    look_back_days: Annotated[int, "number of days to look back"],
-):
-    """
-    Retrieve insider sentiment about a company (retrieved from public SEC information) for the past 15 days
-    Args:
-        ticker (str): ticker symbol of the company
-        curr_date (str): current date you are trading on, yyyy-mm-dd
-    Returns:
-        str: a report of the sentiment in the past 15 days starting at curr_date
-    """
-
-    date_obj = datetime.strptime(curr_date, "%Y-%m-%d")
-    before = date_obj - relativedelta(days=look_back_days)
-    before = before.strftime("%Y-%m-%d")
-
-    data = get_data_in_range(ticker, before, curr_date, "insider_senti", DATA_DIR)
-
-    if len(data) == 0:
-        return ""
-
-    result_str = ""
-    seen_dicts = []
-    for date, senti_list in data.items():
-        for entry in senti_list:
-            if entry not in seen_dicts:
-                result_str += f"### {entry['year']}-{entry['month']}:\nChange: {entry['change']}\nMonthly Share Purchase Ratio: {entry['mspr']}\n\n"
-                seen_dicts.append(entry)
-
-    return (
-        f"## {ticker} Insider Sentiment Data for {before} to {curr_date}:\n"
-        + result_str
-        + "The change field refers to the net buying/selling from all insiders' transactions. The mspr field refers to monthly share purchase ratio."
-    )
-
-
-def get_finnhub_company_insider_transactions(
-    ticker: Annotated[str, "ticker symbol"],
-    curr_date: Annotated[
-        str,
-        "current date you are trading at, yyyy-mm-dd",
-    ],
-    look_back_days: Annotated[int, "how many days to look back"],
-):
-    """
-    Retrieve insider transcaction information about a company (retrieved from public SEC information) for the past 15 days
-    Args:
-        ticker (str): ticker symbol of the company
-        curr_date (str): current date you are trading at, yyyy-mm-dd
-    Returns:
-        str: a report of the company's insider transaction/trading informtaion in the past 15 days
-    """
-
-    date_obj = datetime.strptime(curr_date, "%Y-%m-%d")
-    before = date_obj - relativedelta(days=look_back_days)
-    before = before.strftime("%Y-%m-%d")
-
-    data = get_data_in_range(ticker, before, curr_date, "insider_trans", DATA_DIR)
-
-    if len(data) == 0:
-        return ""
-
-    result_str = ""
-
-    seen_dicts = []
-    for date, senti_list in data.items():
-        for entry in senti_list:
-            if entry not in seen_dicts:
-                result_str += f"### Filing Date: {entry['filingDate']}, {entry['name']}:\nChange:{entry['change']}\nShares: {entry['share']}\nTransaction Price: {entry['transactionPrice']}\nTransaction Code: {entry['transactionCode']}\n\n"
-                seen_dicts.append(entry)
-
-    return (
-        f"## {ticker} insider transactions from {before} to {curr_date}:\n"
-        + result_str
-        + "The change field reflects the variation in share count—here a negative number indicates a reduction in holdings—while share specifies the total number of shares involved. The transactionPrice denotes the per-share price at which the trade was executed, and transactionDate marks when the transaction occurred. The name field identifies the insider making the trade, and transactionCode (e.g., S for sale) clarifies the nature of the transaction. FilingDate records when the transaction was officially reported, and the unique id links to the specific SEC filing, as indicated by the source. Additionally, the symbol ties the transaction to a particular company, isDerivative flags whether the trade involves derivative securities, and currency notes the currency context of the transaction."
-    )
-
-
-def get_simfin_balance_sheet(
-    ticker: Annotated[str, "ticker symbol"],
-    freq: Annotated[
-        str,
-        "reporting frequency of the company's financial history: annual / quarterly",
-    ],
-    curr_date: Annotated[str, "current date you are trading at, yyyy-mm-dd"],
-):
-    data_path = os.path.join(
-        DATA_DIR,
-        "fundamental_data",
-        "simfin_data_all",
-        "balance_sheet",
-        "companies",
-        "us",
-        f"us-balance-{freq}.csv",
-    )
-    df = pd.read_csv(data_path, sep=";")
-
-    # Convert date strings to datetime objects and remove any time components
-    df["Report Date"] = pd.to_datetime(df["Report Date"], utc=True).dt.normalize()
-    df["Publish Date"] = pd.to_datetime(df["Publish Date"], utc=True).dt.normalize()
-
-    # Convert the current date to datetime and normalize
-    curr_date_dt = pd.to_datetime(curr_date, utc=True).normalize()
-
-    # Filter the DataFrame for the given ticker and for reports that were published on or before the current date
-    filtered_df = df[(df["Ticker"] == ticker) & (df["Publish Date"] <= curr_date_dt)]
-
-    # Check if there are any available reports; if not, return a notification
-    if filtered_df.empty:
-        print("No balance sheet available before the given current date.")
-        return ""
-
-    # Get the most recent balance sheet by selecting the row with the latest Publish Date
-    latest_balance_sheet = filtered_df.loc[filtered_df["Publish Date"].idxmax()]
-
-    # drop the SimFinID column
-    latest_balance_sheet = latest_balance_sheet.drop("SimFinId")
-
-    return (
-        f"## {freq} balance sheet for {ticker} released on {str(latest_balance_sheet['Publish Date'])[0:10]}: \n"
-        + str(latest_balance_sheet)
-        + "\n\nThis includes metadata like reporting dates and currency, share details, and a breakdown of assets, liabilities, and equity. Assets are grouped as current (liquid items like cash and receivables) and noncurrent (long-term investments and property). Liabilities are split between short-term obligations and long-term debts, while equity reflects shareholder funds such as paid-in capital and retained earnings. Together, these components ensure that total assets equal the sum of liabilities and equity."
-    )
-
-
-def get_simfin_cashflow(
-    ticker: Annotated[str, "ticker symbol"],
-    freq: Annotated[
-        str,
-        "reporting frequency of the company's financial history: annual / quarterly",
-    ],
-    curr_date: Annotated[str, "current date you are trading at, yyyy-mm-dd"],
-):
-    data_path = os.path.join(
-        DATA_DIR,
-        "fundamental_data",
-        "simfin_data_all",
-        "cash_flow",
-        "companies",
-        "us",
-        f"us-cashflow-{freq}.csv",
-    )
-    df = pd.read_csv(data_path, sep=";")
-
-    # Convert date strings to datetime objects and remove any time components
-    df["Report Date"] = pd.to_datetime(df["Report Date"], utc=True).dt.normalize()
-    df["Publish Date"] = pd.to_datetime(df["Publish Date"], utc=True).dt.normalize()
-
-    # Convert the current date to datetime and normalize
-    curr_date_dt = pd.to_datetime(curr_date, utc=True).normalize()
-
-    # Filter the DataFrame for the given ticker and for reports that were published on or before the current date
-    filtered_df = df[(df["Ticker"] == ticker) & (df["Publish Date"] <= curr_date_dt)]
-
-    # Check if there are any available reports; if not, return a notification
-    if filtered_df.empty:
-        print("No cash flow statement available before the given current date.")
-        return ""
-
-    # Get the most recent cash flow statement by selecting the row with the latest Publish Date
-    latest_cash_flow = filtered_df.loc[filtered_df["Publish Date"].idxmax()]
-
-    # drop the SimFinID column
-    latest_cash_flow = latest_cash_flow.drop("SimFinId")
-
-    return (
-        f"## {freq} cash flow statement for {ticker} released on {str(latest_cash_flow['Publish Date'])[0:10]}: \n"
-        + str(latest_cash_flow)
-        + "\n\nThis includes metadata like reporting dates and currency, share details, and a breakdown of cash movements. Operating activities show cash generated from core business operations, including net income adjustments for non-cash items and working capital changes. Investing activities cover asset acquisitions/disposals and investments. Financing activities include debt transactions, equity issuances/repurchases, and dividend payments. The net change in cash represents the overall increase or decrease in the company's cash position during the reporting period."
-    )
-
-
-def get_simfin_income_statements(
-    ticker: Annotated[str, "ticker symbol"],
-    freq: Annotated[
-        str,
-        "reporting frequency of the company's financial history: annual / quarterly",
-    ],
-    curr_date: Annotated[str, "current date you are trading at, yyyy-mm-dd"],
-):
-    data_path = os.path.join(
-        DATA_DIR,
-        "fundamental_data",
-        "simfin_data_all",
-        "income_statements",
-        "companies",
-        "us",
-        f"us-income-{freq}.csv",
-    )
-    df = pd.read_csv(data_path, sep=";")
-
-    # Convert date strings to datetime objects and remove any time components
-    df["Report Date"] = pd.to_datetime(df["Report Date"], utc=True).dt.normalize()
-    df["Publish Date"] = pd.to_datetime(df["Publish Date"], utc=True).dt.normalize()
-
-    # Convert the current date to datetime and normalize
-    curr_date_dt = pd.to_datetime(curr_date, utc=True).normalize()
-
-    # Filter the DataFrame for the given ticker and for reports that were published on or before the current date
-    filtered_df = df[(df["Ticker"] == ticker) & (df["Publish Date"] <= curr_date_dt)]
-
-    # Check if there are any available reports; if not, return a notification
-    if filtered_df.empty:
-        print("No income statement available before the given current date.")
-        return ""
-
-    # Get the most recent income statement by selecting the row with the latest Publish Date
-    latest_income = filtered_df.loc[filtered_df["Publish Date"].idxmax()]
-
-    # drop the SimFinID column
-    latest_income = latest_income.drop("SimFinId")
-
-    return (
-        f"## {freq} income statement for {ticker} released on {str(latest_income['Publish Date'])[0:10]}: \n"
-        + str(latest_income)
-        + "\n\nThis includes metadata like reporting dates and currency, share details, and a comprehensive breakdown of the company's financial performance. Starting with Revenue, it shows Cost of Revenue and resulting Gross Profit. Operating Expenses are detailed, including SG&A, R&D, and Depreciation. The statement then shows Operating Income, followed by non-operating items and Interest Expense, leading to Pretax Income. After accounting for Income Tax and any Extraordinary items, it concludes with Net Income, representing the company's bottom-line profit or loss for the period."
-    )
-
 
 def get_google_news(
     query: Annotated[str, "Query to search with"],
@@ -563,27 +291,27 @@ def _get_tech_index_desc():
     tech_index_params = {
         # Moving Averages
         "close_5_sma": (
-            "5 SMA: 一条反应灵敏的短期均线。"
+            "close_5_sma: 即5 MA, 一条反应灵敏的短期均线。"
             "用途：捕捉动能的快速变化及潜在的入场点。"
             "提示：在震荡市场中容易产生噪音；建议结合较长周期的均线使用，以过滤虚假信号。"
         ),
         "close_10_sma": (
-            "10 SMA: 一条反应灵敏的中短期均线。"
+            "close_10_sma: 即10 MA， 一条反应灵敏的中短期均线。"
             "用途：捕捉动能的快速变化及潜在的入场点。"
             "提示：在震荡市场中容易产生噪音；建议结合较长周期的均线使用，以过滤虚假信号。"
         ),
         "close_20_sma": (
-            "20 SMA: 一条反应灵敏的中短期均线。"
+            "close_20_sma: 即20 MA， 一条反应灵敏的中短期均线。"
             "用途：捕捉动能的快速变化及潜在的入场点。"
             "提示：在震荡市场中容易产生噪音；建议结合较长周期的均线使用，以过滤虚假信号。"
         ),
         "close_60_sma": (
-            "60 SMA: 中期趋势指标。"
+            "close_60_sma: 即60 MA， 中期趋势指标。"
             "用途：识别趋势方向，并充当动态支撑/阻力位。"
             "提示：该指标滞后于价格，建议结合更灵敏的指标使用，以获取及时信号。"
         ),
         "close_240_sma": (
-            "240 SMA: 长期趋势基准。 "
+            "close_240_sma: 即240 MA， 长期趋势基准。 "
             "用途：确认整体市场趋势，并识别金叉/死叉形态。 "
             "提示：该指标反应较慢，最适合用于战略性趋势确认，而非频繁的交易入场。"
         ),
@@ -604,18 +332,23 @@ def _get_tech_index_desc():
             "提示：该指标可能波动较大；在快速变化的市场中，建议配合其他过滤器使用。"
         ),
         # KDJ Related
-        "kdjk": (
-            "KDJ K: 快速确认线，反应短期价格走势。"
-            "用途: 当K线向上突破D线时，表示为上升趋势，可以买进；当K线向下突破D线时，可以卖出。"
-            "提示: K值在0～100的区间内波动， 50为多空均衡线。如果处在多方市场，50是回档的支撑线，如果处在空方市场，50是反弹的压力线。当K值升到90以上时表示偏高，跌到20以下时表示偏低。太高就有下跌的可能，而太低就有上涨的机会。"
+        "kdj": (
+            "kdj: 即随机指标，它的核心是研究股票收盘价在某个周期内的相对位置。kdj的数值范围通常在0到100之间，尤其适用于震荡行情，在趋势明确的单边市里，它很容易失灵。kdj由三条线组成：K线、D线和J线，K线反应相对迅速，可以看作是价格波动的快跑者；D线是K线的平滑，算是稳健派；J线则更为灵敏，波动更大，像是活跃分子。K线、D线、J线在一起，共同描绘出价格动能的强弱变化。"
+            "用途: 有两个信号值得重点关注。一个是金叉和死叉。当K线从下往上穿过D线，形成金叉，通常被视作一个可能向上的信号；反之，K线从上往下穿过D线，形成死叉，则可能是一个向下的警示。另一个是背离。比如，股价创新高了，但KDJ指标的高点却没有跟上，反而在降低，这就叫顶背离，暗示上涨动能可能在衰减。反过来，股价创新低，指标低点却抬高，形成底背离，可能预示着下跌动力不足了。"
+            "提示: 一般来说，当指标运行到80以上的区域，市场会认为进入了超买状态，即短期内买的人太多了，股价可能有点过热，有回调的可能。相反，当指标跌到20以下的区域，就进入了超买状态，意味着卖盘可能过度释放，股价有反弹的潜力。不要把超买超卖区域当作绝对的买卖指令，比如一看指标到了80以上就急着卖出，结果股价反而继续上涨，错过了后面一大段行情。在强势的上涨趋势里，KDJ可能会长时间停留在超买区，这叫高位钝化；在下跌趋势里，它也可能会在超卖区徘徊很久。所以，不要单独看kdj一个信号，需要结合其他指标联动分析，比如，看看股价的整体趋势是向上还是向下，这能帮我们判断那个金叉或死叉的效力有多强。再比如，结合成交量，如果金叉时伴随着放量，那这个信号的可靠性就会高很多。"
         ),
-        "kdjd": (
-            "KDJ D: D为慢速指标。 "
-            "用途: D黄色线由下转上为买入信号，由上转下为卖出信号。 "
-            "提示: D值在0～100的区间内波动， 50为多空均衡线。如果处在多方市场，50是回档的支撑线，如果处在空方市场，50是反弹的压力线。"
+        "kdjk_18": (
+            "kdjk: 为KDJ指标的K，即快线，反应短期价格走势，需要与kdjd联动分析。KDJ即随机指标，它的核心是研究股票收盘价在某个周期内的相对位置。kdj的数值范围通常在0到100之间，尤其适用于震荡行情，在趋势明确的单边市里，它很容易失灵。kdj由三条线组成：K线、D线和J线，K线反应相对迅速，可以看作是价格波动的快跑者；D线是K线的平滑，算是稳健派；J线则更为灵敏，波动更大，像是活跃分子。K线、D线、J线在一起，共同描绘出价格动能的强弱变化。"
+            "用途: 有两个信号值得重点关注。一个是金叉和死叉。当K线从下往上穿过D线，形成金叉，通常被视作一个可能向上的信号；反之，K线从上往下穿过D线，形成死叉，则可能是一个向下的警示。另一个是背离。比如，股价创新高了，但KDJ指标的高点却没有跟上，反而在降低，这就叫顶背离，暗示上涨动能可能在衰减。反过来，股价创新低，指标低点却抬高，形成底背离，可能预示着下跌动力不足了。"
+            "提示: 一般来说，当指标运行到80以上的区域，市场会认为进入了超买状态，即短期内买的人太多了，股价可能有点过热，有回调的可能。相反，当指标跌到20以下的区域，就进入了超买状态，意味着卖盘可能过度释放，股价有反弹的潜力。不要把超买超卖区域当作绝对的买卖指令，比如一看指标到了80以上就急着卖出，结果股价反而继续上涨，错过了后面一大段行情。在强势的上涨趋势里，KDJ可能会长时间停留在超买区，这叫高位钝化；在下跌趋势里，它也可能会在超卖区徘徊很久。所以，不要单独看kdj一个信号，需要结合其他指标联动分析，比如，看看股价的整体趋势是向上还是向下，这能帮我们判断那个金叉或死叉的效力有多强。再比如，结合成交量，如果金叉时伴随着放量，那这个信号的可靠性就会高很多。"
+        ),
+        "kdjd_18": (
+            "kdjd: 为KDJ指标的D，即慢线，D为慢速指标，需要与kdjk联动分析。KDJ即随机指标，它的核心是研究股票收盘价在某个周期内的相对位置。kdj的数值范围通常在0到100之间，尤其适用于震荡行情，在趋势明确的单边市里，它很容易失灵。kdj由三条线组成：K线、D线和J线，K线反应相对迅速，可以看作是价格波动的快跑者；D线是K线的平滑，算是稳健派；J线则更为灵敏，波动更大，像是活跃分子。K线、D线、J线在一起，共同描绘出价格动能的强弱变化。"
+            "用途: 有两个信号值得重点关注。一个是金叉和死叉。当K线从下往上穿过D线，形成金叉，通常被视作一个可能向上的信号；反之，K线从上往下穿过D线，形成死叉，则可能是一个向下的警示。另一个是背离。比如，股价创新高了，但KDJ指标的高点却没有跟上，反而在降低，这就叫顶背离，暗示上涨动能可能在衰减。反过来，股价创新低，指标低点却抬高，形成底背离，可能预示着下跌动力不足了。"
+            "提示: 一般来说，当指标运行到80以上的区域，市场会认为进入了超买状态，即短期内买的人太多了，股价可能有点过热，有回调的可能。相反，当指标跌到20以下的区域，就进入了超买状态，意味着卖盘可能过度释放，股价有反弹的潜力。不要把超买超卖区域当作绝对的买卖指令，比如一看指标到了80以上就急着卖出，结果股价反而继续上涨，错过了后面一大段行情。在强势的上涨趋势里，KDJ可能会长时间停留在超买区，这叫高位钝化；在下跌趋势里，它也可能会在超卖区徘徊很久。所以，不要单独看kdj一个信号，需要结合其他指标联动分析，比如，看看股价的整体趋势是向上还是向下，这能帮我们判断那个金叉或死叉的效力有多强。再比如，结合成交量，如果金叉时伴随着放量，那这个信号的可靠性就会高很多。"
         ),
         # BIAS Related
-        "bias": (
+        "bias_20": (
             "BIAS : 通过计算市场指数或收盘价与某条移动平均线之间的差距百分比，以反映一定时期内价格与其MA偏离程度的指标，从而得出价格在剧烈波动时因偏离移动平均趋势而造成回档或反弹的可能性，以及价格在正常波动范围内移动而形成继续原有势的可信度。"
             "用途: 应该结合不同情况灵活运用才能提高盈利机会。第一，对于风险不同的股票应区别对待。有业绩保证且估值水平合理的个股，在下跌情况下乖离率通常较低时就开始反弹。这是由于持有人心态稳定不愿低价抛售，同时空仓投资者担心错过时机而及时买入的结果。反之，对绩差股而言，其乖离率通常在跌至绝对值较大时，才开始反弹。第二，要考虑流通市值的影响。流通市值较大的股票，不容易被操纵，走势符合一般的市场规律，适宜用乖离率进行分析。而流通市值较小的个股或庄股由于容易被控盘，因此在使用该指标时应谨慎。第三，在股价的低位密集成交区，由于筹码分散，运用乖离率指导操作时成功率较高，而在股价经过大幅攀升后，在机构的操纵下容易暴涨暴跌，此时成功率则相对较低。"
             "提示: 当乖离率接近历史最大值时，预示着多方发威已接近极限，行情随时都可能向下，投资者应减仓，而不能盲目追高。当乖离率接近历史最小值时，预示着空方发威接近极限，行情随时都可能掉头向上，投资者不应再割肉出局而应逢低吸纳。"
@@ -632,12 +365,13 @@ def _get_tushare_tech_data_summary (
     end_date: Annotated[str, "End date in yyyymmdd format"]
 ):
     # Add header information
-    header = f"# Stock data for {symbol.upper()} from {start_date} to {end_date}\n"
-    header += f"# Total records: {0 if data is None else len(data)}\n"
-    header += f"# Data retrieved on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+    header = f"# {start_date}至{end_date} {symbol.upper()}股价数据：\n"
+    header += f"# 总记录数: {0 if data is None else len(data)}\n"
+    header += f"# 检索时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+    header += f"# 检索到的股价数据: \n\n"
 
     if common_utils.is_empty(data):
-        return header + "None Data"
+        return header + " 无数据"
 
     selected_columns = ["date", "open", "high", "low", "close", "volume", "amount", 
                         "close_5_sma", "close_10_sma", "close_20_sma", "close_60_sma", "close_240_sma", 
@@ -647,20 +381,22 @@ def _get_tushare_tech_data_summary (
     # Convert DataFrame to CSV string, including trade_date、open、high、low、close、vol and amount
     price_data_string = data.iloc[:, :7].to_csv(index=False)
 
+    data = data.astype({"date": str})
+
     tech_index_string = ""
     tech_index_params = _get_tech_index_desc()
     for i in range(7, len(selected_columns)):
         sub_data = data.iloc[:, [0, i]]
         indicator_value = ""
         for _, value in sub_data.iterrows():
-            indicator_value += f"{value[0]}: {value[1]:.2}\n"  
+            indicator_value += f"{value[0]}: {value[1]:.2f}\n"  
                 
         tech_index_string += (
             "\n\n"
-            + f"## {selected_columns[i]} values from {start_date} to {end_date}:\n\n"
+            + f"## {start_date}至{end_date} {selected_columns[i]} 取值如下 :\n\n"
             + f"{indicator_value}"
             + "\n\n"
-            + tech_index_params.get(selected_columns[i], "No description available.")
+            + tech_index_params.get(selected_columns[i], "无可用描述。")
         )
 
     return header + price_data_string + tech_index_string
